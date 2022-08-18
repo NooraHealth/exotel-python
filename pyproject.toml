@@ -2,7 +2,7 @@
 name = "pyexotel"
 version = "0.1.0"
 description = "A Python wrapper for the Exotel API"
-authors = ["Udit <23015406+udit-001@users.noreply.github.com>"]
+authors = ["Udit <udit@noorahealth.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
