@@ -1,4 +1,6 @@
 import json
+from datetime import datetime
+from typing import List
 from urllib.parse import urljoin
 
 import pytz
@@ -12,18 +14,18 @@ class Exotel:
         self.baseurl = urljoin(baseurl, "v2/accounts/{sid}/".format(sid=sid))
         self.auth_headers = HTTPBasicAuth(key, token)
 
-    def get_campaign_details(self, campaign_id):
+    def get_campaign_details(self, campaign_id: str):
         return requests.get(urljoin(self.baseurl, 'campaigns/{cid}'.format(cid=campaign_id)),
                             auth=self.auth_headers)
 
-    def get_campaign_call_details(self, campaign_id):
+    def get_campaign_call_details(self, campaign_id: str):
         return requests.get(urljoin(self.baseurl, 'campaigns/{cid}/call-details'.format(cid=campaign_id)),
                             auth=self.auth_headers)
 
     def get_bulk_campaign_details(self):
         return requests.get(urljoin(self.baseurl, 'campaigns'), auth=self.auth_headers)
 
-    def create_campaign(self, to, caller_id, app_id, name, send_at, end_at, campaign_type="static"):
+    def create_campaign(self, to: List[str], caller_id: str, app_id: str, name: str, send_at: datetime, end_at: datetime, campaign_type: str = "static"):
         ist = pytz.timezone("Asia/Kolkata")
         send_at_ist = send_at.astimezone(ist).isoformat()
         end_at_ist = end_at.astimezone(ist).isoformat()
@@ -44,13 +46,13 @@ class Exotel:
         }
         return requests.post(urljoin(self.baseurl, 'campaigns'), auth=self.auth_headers, data=json.dumps(payload))
 
-    def delete_campaign(self, campaign_id):
+    def delete_campaign(self, campaign_id: str):
         return requests.delete(urljoin(self.baseurl, "campaigns/{cid}".format(cid=campaign_id)), auth=self.auth_headers)
 
-    def get_contact_details(self, contact_id):
+    def get_contact_details(self, contact_id: str):
         return requests.get(urljoin(self.baseurl, "contacts/{cid}".format(cid=contact_id)), auth=self.auth_headers)
 
-    def create_contacts(self, numbers):
+    def create_contacts(self, numbers: List[str]):
         contacts_url = urljoin(self.baseurl, "contacts")
         payload = {
             "contacts": [
@@ -62,17 +64,17 @@ class Exotel:
         sids = [i["data"]["sid"] for i in data["response"]]
         return sids
 
-    def delete_contact(self, sid):
+    def delete_contact(self, sid: str):
         return requests.delete(urljoin(self.baseurl, "contacts/{cid}".format(cid=sid)), auth=self.auth_headers)
 
-    def delete_contacts(self, sids):
+    def delete_contacts(self, sids: str) -> List[int]:
         responses = []
         for sid in sids:
             responses.append(self.delete_contact(sid).status_code)
 
         return responses
 
-    def add_contacts_to_list(self, sids, list_id):
+    def add_contacts_to_list(self, sids: List[str], list_id: str):
         payload = {
             "contact_references": [
                 {"contact_sid": sid} for sid in sids
@@ -81,7 +83,7 @@ class Exotel:
         return requests.post(
             urljoin(self.baseurl, "lists/{list_id}/contacts".format(list_id=list_id)), auth=self.auth_headers, data=json.dumps(payload))
 
-    def create_list(self, name, tag="demo", numbers=None):
+    def create_list(self, name: str, tag: str = "demo", numbers: List[str] = None) -> str:
         payload = {
             "lists": [
                 {
@@ -97,5 +99,5 @@ class Exotel:
         response = self.add_contacts_to_list(contact_sids, list_id)
         return list_id
 
-    def delete_list(self, list_id):
+    def delete_list(self, list_id: str):
         return requests.delete(urljoin(self.baseurl, "lists/{list_id}".format(list_id=list_id)), auth=self.auth_headers)
