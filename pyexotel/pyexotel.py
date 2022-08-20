@@ -8,22 +8,40 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 
+class AuthenticationFailed(Exception):
+    pass
+
+
 class Exotel:
-    def __init__(self, sid, key, token, baseurl="https://api.exotel.com"):
+    def __init__(self, sid: str, key: str, token: str, baseurl: str = "https://api.exotel.com"):
         self.sid = sid
         self.baseurl = urljoin(baseurl, "v2/accounts/{sid}/".format(sid=sid))
         self.auth_headers = HTTPBasicAuth(key, token)
 
+    def __call_api(self, method: str, endpoint: str, data: dict = None) -> dict:
+        if method == "POST" and data is not None:
+            data = json.dumps(data)
+
+        if data is not None:
+            response = requests.request(
+                method=method, url=endpoint, auth=self.auth_headers, data=data)
+        else:
+            response = requests.request(
+                method=method, url=endpoint, auth=self.auth_headers)
+
+        if response.status_code == 401:
+            raise AuthenticationFailed
+
+        return response.json()
+
     def get_campaign_details(self, campaign_id: str):
-        return requests.get(urljoin(self.baseurl, 'campaigns/{cid}'.format(cid=campaign_id)),
-                            auth=self.auth_headers)
+        return self.__call_api("GET", urljoin(self.baseurl, 'campaigns/{cid}'.format(cid=campaign_id)))
 
     def get_campaign_call_details(self, campaign_id: str):
-        return requests.get(urljoin(self.baseurl, 'campaigns/{cid}/call-details'.format(cid=campaign_id)),
-                            auth=self.auth_headers)
+        return self.__call_api("GET", urljoin(self.baseurl, 'campaigns/{cid}/call-details'.format(cid=campaign_id)))
 
     def get_bulk_campaign_details(self):
-        return requests.get(urljoin(self.baseurl, 'campaigns'), auth=self.auth_headers)
+        return self.__call_api("GET", urljoin(self.baseurl, 'campaigns'))
 
     def create_campaign(self, to: List[str], caller_id: str, app_id: str, name: str, send_at: datetime, end_at: datetime, campaign_type: str = "static"):
         ist = pytz.timezone("Asia/Kolkata")
@@ -44,13 +62,13 @@ class Exotel:
                 }
             ]
         }
-        return requests.post(urljoin(self.baseurl, 'campaigns'), auth=self.auth_headers, data=json.dumps(payload))
+        return self.__call_api("POST", urljoin(self.baseurl, 'campaigns'), data=payload)
 
     def delete_campaign(self, campaign_id: str):
-        return requests.delete(urljoin(self.baseurl, "campaigns/{cid}".format(cid=campaign_id)), auth=self.auth_headers)
+        return self.__call_api("DELETE", urljoin(self.baseurl, "campaigns/{cid}".format(cid=campaign_id)))
 
     def get_contact_details(self, contact_id: str):
-        return requests.get(urljoin(self.baseurl, "contacts/{cid}".format(cid=contact_id)), auth=self.auth_headers)
+        return self.__call_api("GET", urljoin(self.baseurl, "contacts/{cid}".format(cid=contact_id)))
 
     def create_contacts(self, numbers: List[str]):
         contacts_url = urljoin(self.baseurl, "contacts")
@@ -59,18 +77,17 @@ class Exotel:
                 {"number": num} for num in numbers
             ]
         }
-        data = requests.post(contacts_url, data=json.dumps(
-            payload), auth=self.auth_headers).json()
+        data = self.__call_api("POST", contacts_url, data=payload)
         sids = [i["data"]["sid"] for i in data["response"]]
         return sids
 
     def delete_contact(self, sid: str):
-        return requests.delete(urljoin(self.baseurl, "contacts/{cid}".format(cid=sid)), auth=self.auth_headers)
+        return self.__call_api("DELETE", urljoin(self.baseurl, "contacts/{cid}".format(cid=sid)))
 
-    def delete_contacts(self, sids: str) -> List[int]:
+    def delete_contacts(self, sids: str) -> List[dict]:
         responses = []
         for sid in sids:
-            responses.append(self.delete_contact(sid).status_code)
+            responses.append(self.delete_contact(sid))
 
         return responses
 
@@ -80,8 +97,8 @@ class Exotel:
                 {"contact_sid": sid} for sid in sids
             ]
         }
-        return requests.post(
-            urljoin(self.baseurl, "lists/{list_id}/contacts".format(list_id=list_id)), auth=self.auth_headers, data=json.dumps(payload))
+        return self.__call_api("POST",
+                               urljoin(self.baseurl, "lists/{list_id}/contacts".format(list_id=list_id)), data=payload)
 
     def create_list(self, name: str, tag: str = "demo", numbers: List[str] = None) -> str:
         payload = {
@@ -92,12 +109,12 @@ class Exotel:
                 }
             ]
         }
-        data = requests.post(urljoin(self.baseurl, "lists"),
-                             auth=self.auth_headers, data=json.dumps(payload)).json()
+        data = self.__call_api("POST", urljoin(self.baseurl, "lists"),
+                               data=payload)
         list_id = data["response"][0]["data"]["sid"]
         contact_sids = self.create_contacts(numbers)
         response = self.add_contacts_to_list(contact_sids, list_id)
         return list_id
 
     def delete_list(self, list_id: str):
-        return requests.delete(urljoin(self.baseurl, "lists/{list_id}".format(list_id=list_id)), auth=self.auth_headers)
+        return self.__call_api("DELETE", urljoin(self.baseurl, "lists/{list_id}".format(list_id=list_id)))
