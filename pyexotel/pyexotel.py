@@ -12,6 +12,18 @@ class AuthenticationFailed(Exception):
     pass
 
 
+class PermissionDenied(Exception):
+    pass
+
+
+class PaymentRequired(Exception):
+    pass
+
+
+class Throttled(Exception):
+    pass
+
+
 class Exotel:
     def __init__(self, sid: str, key: str, token: str, baseurl: str = "https://api.exotel.com"):
         self.sid = sid
@@ -31,6 +43,14 @@ class Exotel:
 
         if response.status_code == 401:
             raise AuthenticationFailed
+        elif response.status_code == 403:
+            raise PermissionDenied(
+                "Your credentials are valid, but you don't have access to the requested resource.")
+        elif response.status_code == 402:
+            raise PaymentRequired(
+                "The action is not available on your plan, or you have exceeded usage limits for your current plan.")
+        elif response.status_code == 429:
+            raise Throttled("Request was throttled.")
 
         return response.json()
 
