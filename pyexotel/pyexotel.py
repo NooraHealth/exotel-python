@@ -54,16 +54,16 @@ class Exotel:
 
         return response.json()
 
-    def get_campaign_details(self, campaign_id: str):
+    def get_campaign_details(self, campaign_id: str) -> dict:
         return self.__call_api("GET", urljoin(self.baseurl, 'campaigns/{cid}'.format(cid=campaign_id)))
 
     def get_campaign_call_details(self, campaign_id: str):
         return self.__call_api("GET", urljoin(self.baseurl, 'campaigns/{cid}/call-details'.format(cid=campaign_id)))
 
-    def get_bulk_campaign_details(self):
+    def get_bulk_campaign_details(self) -> dict:
         return self.__call_api("GET", urljoin(self.baseurl, 'campaigns'))
 
-    def create_campaign(self, to: List[str], caller_id: str, app_id: str, name: str, send_at: datetime, end_at: datetime, campaign_type: str = "static"):
+    def create_campaign(self, to: List[str], caller_id: str, app_id: str, name: str, send_at: datetime, end_at: datetime, campaign_type: str = "static") -> dict:
         ist = pytz.timezone("Asia/Kolkata")
         send_at_ist = send_at.astimezone(ist).isoformat()
         end_at_ist = end_at.astimezone(ist).isoformat()
@@ -84,13 +84,13 @@ class Exotel:
         }
         return self.__call_api("POST", urljoin(self.baseurl, 'campaigns'), data=payload)
 
-    def delete_campaign(self, campaign_id: str):
+    def delete_campaign(self, campaign_id: str) -> dict:
         return self.__call_api("DELETE", urljoin(self.baseurl, "campaigns/{cid}".format(cid=campaign_id)))
 
-    def get_contact_details(self, contact_id: str):
+    def get_contact_details(self, contact_id: str) -> dict:
         return self.__call_api("GET", urljoin(self.baseurl, "contacts/{cid}".format(cid=contact_id)))
 
-    def create_contacts(self, numbers: List[str]):
+    def create_contacts(self, numbers: List[str]) -> List[str]:
         contacts_url = urljoin(self.baseurl, "contacts")
         payload = {
             "contacts": [
@@ -101,7 +101,7 @@ class Exotel:
         sids = [i["data"]["sid"] for i in data["response"]]
         return sids
 
-    def delete_contact(self, sid: str):
+    def delete_contact(self, sid: str) -> dict:
         return self.__call_api("DELETE", urljoin(self.baseurl, "contacts/{cid}".format(cid=sid)))
 
     def delete_contacts(self, sids: str) -> List[dict]:
@@ -111,7 +111,7 @@ class Exotel:
 
         return responses
 
-    def add_contacts_to_list(self, sids: List[str], list_id: str):
+    def add_contacts_to_list(self, sids: List[str], list_id: str) -> dict:
         payload = {
             "contact_references": [
                 {"contact_sid": sid} for sid in sids
@@ -139,5 +139,5 @@ class Exotel:
 
         return list_id
 
-    def delete_list(self, list_id: str):
+    def delete_list(self, list_id: str) -> dict:
         return self.__call_api("DELETE", urljoin(self.baseurl, "lists/{list_id}".format(list_id=list_id)))
