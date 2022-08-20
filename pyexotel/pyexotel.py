@@ -132,8 +132,11 @@ class Exotel:
         data = self.__call_api("POST", urljoin(self.baseurl, "lists"),
                                data=payload)
         list_id = data["response"][0]["data"]["sid"]
-        contact_sids = self.create_contacts(numbers)
-        response = self.add_contacts_to_list(contact_sids, list_id)
+
+        if numbers is not None:
+            contact_sids = self.create_contacts(numbers)
+            response = self.add_contacts_to_list(contact_sids, list_id)
+
         return list_id
 
     def delete_list(self, list_id: str):
