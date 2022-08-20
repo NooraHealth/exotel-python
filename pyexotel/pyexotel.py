@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 from typing import List
 from urllib.parse import urljoin
@@ -31,12 +30,14 @@ class Exotel:
         self.auth_headers = HTTPBasicAuth(key, token)
 
     def __call_api(self, method: str, endpoint: str, data: dict = None) -> dict:
-        if method == "POST" and data is not None:
-            data = json.dumps(data)
 
         if data is not None:
-            response = requests.request(
-                method=method, url=endpoint, auth=self.auth_headers, data=data)
+            if method in ["POST", "PUT", "PATCH"]:
+                response = requests.request(
+                    method=method, url=endpoint, auth=self.auth_headers, json=data)
+            elif method == "GET":
+                response = requests.request(
+                    method=method, url=endpoint, auth=self.auth_headers, params=data)
         else:
             response = requests.request(
                 method=method, url=endpoint, auth=self.auth_headers)
