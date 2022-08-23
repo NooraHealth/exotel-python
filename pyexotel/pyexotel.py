@@ -6,21 +6,94 @@ import pytz
 import requests
 from requests.auth import HTTPBasicAuth
 
-
-class AuthenticationFailed(Exception):
-    pass
+from .exceptions import *
 
 
-class PermissionDenied(Exception):
-    pass
+class Schedule:
+    def __init__(self, send_at: datetime = None, end_at: datetime = None):
+        self.send_at = send_at
+        self.end_at = end_at
+
+    def _is_valid_arg(self, arg, value):
+        if not isinstance(value, datetime):
+            raise ValueError("{arg} should be of type datetime not {_type}".format(
+                arg=arg, _type=type(value)))
+        return value
+
+    def _format_datetime(self, value):
+        ist = pytz.timezone("Asia/Kolkata")
+        return value.astimezone(ist).isoformat()
+
+    @property
+    def send_at(self):
+        return self._send_at
+
+    @property
+    def end_at(self):
+        return self._end_at
+
+    @send_at.setter
+    def send_at(self, value):
+        self._send_at = self._is_valid_arg("send_at", value)
+
+    @end_at.setter
+    def end_at(self, value):
+        self._end_at = self._is_valid_arg("end_at", value)
+
+    def to_json(self):
+        output = {
+            "send_at": self._format_datetime(self.send_at)
+        }
+        if self.end_at is not None:
+            output["end_at"] = self._format_datetime(self.end_at)
+        return output
 
 
-class PaymentRequired(Exception):
-    pass
+class Retry:
+    def __init__(self, number_of_retries: int, interval_mins: int, on_status: List[str], mechanism: str = "Linear"):
+        self.number_of_retries = number_of_retries
+        self.interval_mins = interval_mins
+        self.on_status = on_status
+        self.mechanism = mechanism
 
+    @property
+    def on_status(self):
+        return self._on_status
 
-class Throttled(Exception):
-    pass
+    @property
+    def mechanism(self):
+        return self._mechanism
+
+    @on_status.setter
+    def on_status(self, value):
+        self._on_status = self._is_valid_status(value)
+
+    @on_status.setter
+    def mechanism(self, value):
+        self._mechanism = self._is_valid_mechanism(value)
+
+    def _is_valid_status(self, value):
+        values = ["busy", "failure", "no-answer"]
+
+        if not isinstance(value, list):
+            raise TypeError(
+                "on_status argument should be a list")
+
+        for v in value:
+            if v not in values:
+                raise ValueError(
+                    "{v} is not a valid value for status".format(v=v))
+        return value
+
+    def _is_valid_mechanism(self, value):
+        values = ["Linear", "Exponential"]
+        if value not in values:
+            raise ValueError(
+                "{v} is not a valid value for mechanism".format(v=value))
+        return value
+
+    def to_dict(self):
+        return self.__dict__
 
 
 class Exotel:
@@ -64,25 +137,37 @@ class Exotel:
     def get_bulk_campaign_details(self) -> dict:
         return self.__call_api("GET", urljoin(self.baseurl, 'campaigns'))
 
-    def create_campaign(self, to: List[str], caller_id: str, app_id: str, name: str, send_at: datetime, end_at: datetime, campaign_type: str = "static") -> dict:
-        ist = pytz.timezone("Asia/Kolkata")
-        send_at_ist = send_at.astimezone(ist).isoformat()
-        end_at_ist = end_at.astimezone(ist).isoformat()
-        payload = {
-            "campaigns": [
-                {
-                    "from": to,
-                    "caller_id": caller_id,
-                    "campaign_type": campaign_type,
-                    "url": f"http://my.exotel.com/{self.sid}/exoml/start_voice/{app_id}",
-                    "name": name,
-                    "schedule": {
-                        "send_at": send_at_ist,
-                        "end_at": end_at_ist
-                    }
-                }
-            ]
+    def create_campaign(self, to: List[str], caller_id: str, app_id: str, name: str = None, call_duplicate_numbers: bool = None, schedule: Schedule = None, campaign_type: str = "static", call_status_callback: str = None, call_schedule_callback: str = None, status_callback: str = None, retry: Retry = None) -> dict:
+        campaign = {
+            "from": to,
+            "caller_id": caller_id,
+            "campaign_type": campaign_type,
+            "url": f"http://my.exotel.com/{self.sid}/exoml/start_voice/{app_id}",
         }
+
+        if call_duplicate_numbers is not None:
+            campaign["call_duplicate_numbers"] = call_duplicate_numbers
+
+        if name is not None:
+            campaign["name"] = name
+
+        if schedule is not None:
+            campaign["schedule"] = schedule.to_json()
+
+        if call_status_callback is not None:
+            campaign["call_status_callback"] = call_status_callback
+
+        if call_schedule_callback is not None:
+            campaign["call_schedule_callback"] = call_schedule_callback
+
+        if status_callback is not None:
+            campaign["status_callback"] = status_callback
+
+        if retry is not None:
+            campaign["retries"] = retry.to_dict()
+
+        payload = {"campaigns": [campaign]}
+
         return self.__call_api("POST", urljoin(self.baseurl, 'campaigns'), data=payload)
 
     def delete_campaign(self, campaign_id: str) -> dict:
@@ -132,6 +217,11 @@ class Exotel:
         }
         data = self.__call_api("POST", urljoin(self.baseurl, "lists"),
                                data=payload)
+
+        if data["response"][0]["code"] == 409:
+            description = data["response"][0]["error_data"]["description"]
+            raise UniqueViolationError(description)
+
         list_id = data["response"][0]["data"]["sid"]
 
         if numbers is not None:
