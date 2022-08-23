@@ -9,6 +9,8 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 from .exceptions import *
+from .helpers import validate_list_of_nums
+from .validators import validate_url
 
 
 class Schedule:
@@ -170,13 +172,15 @@ class Exotel:
             campaign["schedule"] = schedule.to_json()
 
         if call_status_callback is not None:
-            campaign["call_status_callback"] = call_status_callback
+            campaign["call_status_callback"] = validate_url(
+                call_status_callback)
 
         if call_schedule_callback is not None:
-            campaign["call_schedule_callback"] = call_schedule_callback
+            campaign["call_schedule_callback"] = validate_url(
+                call_schedule_callback)
 
         if status_callback is not None:
-            campaign["status_callback"] = status_callback
+            campaign["status_callback"] = validate_url(status_callback)
 
         if retry is not None:
             campaign["retries"] = retry.to_dict()
@@ -185,8 +189,9 @@ class Exotel:
 
         return self.__call_api("POST", urljoin(self.baseurl, 'campaigns'), data=payload)
 
-    def create_campaign_with_list(self, nums: List[str], list_name: str, caller_id: str, app_id: str, **kwargs) -> dict:
-        list_id = self.create_list(name=list_name, numbers=nums)
+    def create_campaign_with_list(self, numbers: List[str], list_name: str, caller_id: str, app_id: str, **kwargs) -> dict:
+        validate_list_of_nums(numbers)
+        list_id = self.create_list(name=list_name, numbers=numbers)
         lists = [list_id]
         return self.create_campaign(caller_id=caller_id, app_id=app_id, lists=lists, **kwargs)
 
@@ -197,6 +202,7 @@ class Exotel:
         return self.__call_api("GET", urljoin(self.baseurl, "contacts/{cid}".format(cid=contact_id)))
 
     def create_contacts(self, numbers: List[str]) -> List[str]:
+        validate_list_of_nums(numbers)
         contacts_url = urljoin(self.baseurl, "contacts")
         payload = {
             "contacts": [
@@ -227,6 +233,7 @@ class Exotel:
                                urljoin(self.baseurl, "lists/{list_id}/contacts".format(list_id=list_id)), data=payload)
 
     def create_list(self, name: str, tag: str = "demo", numbers: List[str] = None) -> str:
+        validate_list_of_nums(numbers)
         payload = {
             "lists": [
                 {
