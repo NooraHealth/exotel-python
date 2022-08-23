@@ -1,4 +1,6 @@
 from datetime import datetime
+from multiprocessing.sharedctypes import Value
+from subprocess import call
 from typing import List
 from urllib.parse import urljoin
 
@@ -137,13 +139,26 @@ class Exotel:
     def get_bulk_campaign_details(self) -> dict:
         return self.__call_api("GET", urljoin(self.baseurl, 'campaigns'))
 
-    def create_campaign(self, to: List[str], caller_id: str, app_id: str, name: str = None, call_duplicate_numbers: bool = None, schedule: Schedule = None, campaign_type: str = "static", call_status_callback: str = None, call_schedule_callback: str = None, status_callback: str = None, retry: Retry = None) -> dict:
+    def create_campaign(self, caller_id: str, app_id: str, _from: List[str] = None, lists: List[str] = None, name: str = None, call_duplicate_numbers: bool = None, schedule: Schedule = None, campaign_type: str = "static", call_status_callback: str = None, call_schedule_callback: str = None, status_callback: str = None, retry: Retry = None) -> dict:
         campaign = {
-            "from": to,
             "caller_id": caller_id,
             "campaign_type": campaign_type,
             "url": f"http://my.exotel.com/{self.sid}/exoml/start_voice/{app_id}",
         }
+
+        if (_from is not None) and (lists is not None):
+            raise ValueError(
+                "Both _from and lists can't be provided at the same, only either can be passed")
+
+        if (_from is None) and (lists is None):
+            raise ValueError(
+                "Either _from or lists must be passed, can't create campaign without it")
+
+        if _from is not None:
+            campaign["from"] = _from
+
+        if lists is not None:
+            campaign["lists"] = lists
 
         if call_duplicate_numbers is not None:
             campaign["call_duplicate_numbers"] = call_duplicate_numbers
@@ -169,6 +184,11 @@ class Exotel:
         payload = {"campaigns": [campaign]}
 
         return self.__call_api("POST", urljoin(self.baseurl, 'campaigns'), data=payload)
+
+    def create_campaign_with_list(self, nums: List[str], list_name: str, caller_id: str, app_id: str, **kwargs) -> dict:
+        list_id = self.create_list(name=list_name, numbers=nums)
+        lists = [list_id]
+        return self.create_campaign(caller_id=caller_id, app_id=app_id, lists=lists, **kwargs)
 
     def delete_campaign(self, campaign_id: str) -> dict:
         return self.__call_api("DELETE", urljoin(self.baseurl, "campaigns/{cid}".format(cid=campaign_id)))
