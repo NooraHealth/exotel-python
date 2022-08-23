@@ -20,3 +20,7 @@ class Throttled(PyexotelBaseException):
 
 class UniqueViolationError(PyexotelBaseException):
     pass
+
+
+class ValidationError(PyexotelBaseException):
+    pass
