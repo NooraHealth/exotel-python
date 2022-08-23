@@ -1,2 +1,2 @@
 __version__ = '0.1.0'
-from .pyexotel import Exotel, RetryConfig, ScheduleConfig
+from .pyexotel import Exotel, Retry, Schedule
