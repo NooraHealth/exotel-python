@@ -72,7 +72,7 @@ class Retry:
     def on_status(self, value):
         self._on_status = self._is_valid_status(value)
 
-    @on_status.setter
+    @mechanism.setter
     def mechanism(self, value):
         self._mechanism = self._is_valid_mechanism(value)
 
