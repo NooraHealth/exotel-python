@@ -1,5 +1,5 @@
 # Pyexotel
-A python wrapper for the [Exotel API](https://developer.exotel.com/api)
+An unofficial python wrapper for the [Exotel API](https://developer.exotel.com/api)
 
 
 # How to use
