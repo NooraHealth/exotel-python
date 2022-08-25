@@ -312,3 +312,28 @@ class Exotel:
 
     def delete_list(self, list_id: str) -> dict:
         return self.__call_api("DELETE", "lists/{list_id}".format(list_id=list_id))
+
+    def create_sms_campaign(self, content_type: str, lists: List[str], dlt_entity_id: int, dlt_template_id: int, sender_id: str, sms_type: str, template: str, name: str = None, schedule: Schedule = None, status_callback: str = None, sms_status_callback: str = None):
+        data = {
+            "content_type": content_type,
+            "lists": lists,
+            "dlt_entity_id": dlt_entity_id,
+            "dlt_template_id": dlt_template_id,
+            "sender_id": sender_id,
+            "template": template,
+            "sms_type": sms_type
+        }
+
+        if name is not None:
+            data["name"] = name
+
+        if schedule is not None:
+            data["schedule"] = schedule.to_json()
+
+        if status_callback is not None:
+            data["status_callback"] = validate_url(status_callback)
+
+        if sms_status_callback is not None:
+            data["sms_status_callback"] = validate_url(sms_status_callback)
+
+        return self.__call_api("POST", "sms-campaigns", data=data)
