@@ -308,5 +308,8 @@ class Exotel:
 
         return list_id
 
+    def get_list_details(self, list_id: str) -> dict:
+        return self.__call_api("GET", urljoin(self.baseurl, "lists/{list_id}".format(list_id=list_id)))
+
     def delete_list(self, list_id: str) -> dict:
         return self.__call_api("DELETE", urljoin(self.baseurl, "lists/{list_id}".format(list_id=list_id)))
