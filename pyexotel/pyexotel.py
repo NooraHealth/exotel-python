@@ -145,8 +145,8 @@ class Exotel:
             raise PermissionDenied(
                 "Your credentials are valid, but you don't have access to the requested resource.")
         elif response.status_code == 402:
-            raise PaymentRequired(
-                "The action is not available on your plan, or you have exceeded usage limits for your current plan.")
+            description = get_error_description(response.json())
+            raise PaymentRequired(description)
         elif response.status_code == 429:
             raise Throttled("Request was throttled.")
         elif response.status_code == 400:
