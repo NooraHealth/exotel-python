@@ -141,8 +141,21 @@ class Exotel:
     def get_campaign_details(self, campaign_id: str) -> dict:
         return self.__call_api("GET", urljoin(self.baseurl, 'campaigns/{cid}'.format(cid=campaign_id)))
 
-    def get_campaign_call_details(self, campaign_id: str):
-        return self.__call_api("GET", urljoin(self.baseurl, 'campaigns/{cid}/call-details'.format(cid=campaign_id)))
+    def get_campaign_call_details(self, campaign_id: str, offset: int = None, limit: int = None, status: str = None, sort_by: str = None) -> dict:
+        data = {}
+        if offset is not None:
+            data["offset"] = offset
+
+        if limit is not None:
+            data["limit"] = limit
+
+        if status is not None:
+            data["status"] = status
+
+        if sort_by is not None:
+            data["sort_by"] = sort_by
+
+        return self.__call_api("GET", urljoin(self.baseurl, 'campaigns/{cid}/call-details'.format(cid=campaign_id)), data=data)
 
     def get_bulk_campaign_details(self) -> dict:
         return self.__call_api("GET", urljoin(self.baseurl, 'campaigns'))
