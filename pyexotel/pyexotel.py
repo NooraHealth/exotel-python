@@ -110,17 +110,18 @@ class Exotel:
         self.auth_headers = HTTPBasicAuth(key, token)
 
     def __call_api(self, method: str, endpoint: str, data: dict = None) -> dict:
+        url = urljoin(self.baseurl, endpoint)
 
         if data is not None:
             if method in ["POST", "PUT", "PATCH"]:
                 response = requests.request(
-                    method=method, url=endpoint, auth=self.auth_headers, json=data)
+                    method=method, url=url, auth=self.auth_headers, json=data)
             elif method == "GET":
                 response = requests.request(
-                    method=method, url=endpoint, auth=self.auth_headers, params=data)
+                    method=method, url=url, auth=self.auth_headers, params=data)
         else:
             response = requests.request(
-                method=method, url=endpoint, auth=self.auth_headers)
+                method=method, url=url, auth=self.auth_headers)
 
         if response.status_code == 401:
             raise AuthenticationFailed
@@ -139,7 +140,7 @@ class Exotel:
         return response.json()
 
     def get_campaign_details(self, campaign_id: str) -> dict:
-        return self.__call_api("GET", urljoin(self.baseurl, 'campaigns/{cid}'.format(cid=campaign_id)))
+        return self.__call_api("GET", 'campaigns/{cid}'.format(cid=campaign_id))
 
     def get_campaign_call_details(self, campaign_id: str, offset: int = None, limit: int = None, status: str = None, sort_by: str = None) -> dict:
         data = {}
@@ -155,7 +156,7 @@ class Exotel:
         if sort_by is not None:
             data["sort_by"] = sort_by
 
-        return self.__call_api("GET", urljoin(self.baseurl, 'campaigns/{cid}/call-details'.format(cid=campaign_id)), data=data)
+        return self.__call_api("GET", 'campaigns/{cid}/call-details'.format(cid=campaign_id), data=data)
 
     def get_bulk_campaign_details(self, offset: int = None, limit: int = None, name: str = None, status: str = None, sort_by: str = None) -> dict:
         data = {}
@@ -175,7 +176,7 @@ class Exotel:
         if sort_by is not None:
             data["sort_by"] = sort_by
 
-        return self.__call_api("GET", urljoin(self.baseurl, 'campaigns'), data=data)
+        return self.__call_api("GET", 'campaigns', data=data)
 
     def create_campaign(self, caller_id: str, app_id: str, _from: List[str] = None, lists: List[str] = None, name: str = None, call_duplicate_numbers: bool = None, schedule: Schedule = None, campaign_type: str = "static", call_status_callback: str = None, call_schedule_callback: str = None, status_callback: str = None, retry: Retry = None) -> dict:
         campaign = {
@@ -224,7 +225,7 @@ class Exotel:
 
         payload = {"campaigns": [campaign]}
 
-        return self.__call_api("POST", urljoin(self.baseurl, 'campaigns'), data=payload)
+        return self.__call_api("POST", 'campaigns', data=payload)
 
     def create_campaign_with_list(self, numbers: List[str], list_name: str, caller_id: str, app_id: str, **kwargs) -> dict:
         validate_list_of_nums(numbers)
@@ -245,25 +246,24 @@ class Exotel:
             self.add_contacts_to_list(contact_sids, list_id)
 
     def delete_campaign(self, campaign_id: str) -> dict:
-        return self.__call_api("DELETE", urljoin(self.baseurl, "campaigns/{cid}".format(cid=campaign_id)))
+        return self.__call_api("DELETE", "campaigns/{cid}".format(cid=campaign_id))
 
     def get_contact_details(self, contact_id: str) -> dict:
-        return self.__call_api("GET", urljoin(self.baseurl, "contacts/{cid}".format(cid=contact_id)))
+        return self.__call_api("GET", "contacts/{cid}".format(cid=contact_id))
 
     def create_contacts(self, numbers: List[str]) -> List[str]:
         validate_list_of_nums(numbers)
-        contacts_url = urljoin(self.baseurl, "contacts")
         payload = {
             "contacts": [
                 {"number": num} for num in numbers
             ]
         }
-        data = self.__call_api("POST", contacts_url, data=payload)
+        data = self.__call_api("POST", "contacts", data=payload)
         sids = [i["data"]["sid"] for i in data["response"]]
         return sids
 
     def delete_contact(self, sid: str) -> dict:
-        return self.__call_api("DELETE", urljoin(self.baseurl, "contacts/{cid}".format(cid=sid)))
+        return self.__call_api("DELETE", "contacts/{cid}".format(cid=sid))
 
     def delete_contacts(self, sids: List[str]) -> List[dict]:
         responses = []
@@ -278,8 +278,8 @@ class Exotel:
                 {"contact_sid": sid} for sid in sids
             ]
         }
-        return self.__call_api("POST",
-                               urljoin(self.baseurl, "lists/{list_id}/contacts".format(list_id=list_id)), data=payload)
+        return self.__call_api("POST", "lists/{list_id}/contacts".format(list_id=list_id),
+                               data=payload)
 
     def create_list(self, name: str, tag: str = "demo", numbers: List[str] = None) -> str:
         if numbers is not None:
@@ -293,8 +293,7 @@ class Exotel:
                 }
             ]
         }
-        data = self.__call_api("POST", urljoin(self.baseurl, "lists"),
-                               data=payload)
+        data = self.__call_api("POST", "lists", data=payload)
 
         if data["response"][0]["code"] == 409:
             description = data["response"][0]["error_data"]["description"]
@@ -309,7 +308,7 @@ class Exotel:
         return list_id
 
     def get_list_details(self, list_id: str) -> dict:
-        return self.__call_api("GET", urljoin(self.baseurl, "lists/{list_id}".format(list_id=list_id)))
+        return self.__call_api("GET", "lists/{list_id}".format(list_id=list_id))
 
     def delete_list(self, list_id: str) -> dict:
-        return self.__call_api("DELETE", urljoin(self.baseurl, "lists/{list_id}".format(list_id=list_id)))
+        return self.__call_api("DELETE", "lists/{list_id}".format(list_id=list_id))
