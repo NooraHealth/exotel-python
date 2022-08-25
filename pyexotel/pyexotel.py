@@ -52,7 +52,9 @@ class Schedule:
 
 
 class Retry:
-    def __init__(self, number_of_retries: int, interval_mins: int, on_status: List[str], mechanism: str = "Linear"):
+    def __init__(
+            self, number_of_retries: int, interval_mins: int,
+            on_status: List[str], mechanism: str = "Linear"):
         self.number_of_retries = number_of_retries
         self.interval_mins = interval_mins
         self.on_status = on_status
@@ -104,7 +106,8 @@ class Retry:
 
 
 class Exotel:
-    def __init__(self, sid: str, key: str, token: str, baseurl: str = "https://api.exotel.com"):
+    def __init__(self, sid: str, key: str, token: str,
+                 baseurl: str = "https://api.exotel.com"):
         self.sid = sid
         self.baseurl = urljoin(baseurl, "v2/accounts/{sid}/".format(sid=sid))
         self.auth_headers = HTTPBasicAuth(key, token)
@@ -142,7 +145,9 @@ class Exotel:
     def get_campaign_details(self, campaign_id: str) -> dict:
         return self.__call_api("GET", 'campaigns/{cid}'.format(cid=campaign_id))
 
-    def get_campaign_call_details(self, campaign_id: str, offset: int = None, limit: int = None, status: str = None, sort_by: str = None) -> dict:
+    def get_campaign_call_details(
+            self, campaign_id: str, offset: int = None, limit: int = None, status: str = None,
+            sort_by: str = None) -> dict:
         data = {}
         if offset is not None:
             data["offset"] = offset
@@ -156,9 +161,13 @@ class Exotel:
         if sort_by is not None:
             data["sort_by"] = sort_by
 
-        return self.__call_api("GET", 'campaigns/{cid}/call-details'.format(cid=campaign_id), data=data)
+        return self.__call_api(
+            "GET", 'campaigns/{cid}/call-details'.format(cid=campaign_id),
+            data=data)
 
-    def get_bulk_campaign_details(self, offset: int = None, limit: int = None, name: str = None, status: str = None, sort_by: str = None) -> dict:
+    def get_bulk_campaign_details(
+            self, offset: int = None, limit: int = None, name: str = None, status: str = None,
+            sort_by: str = None) -> dict:
         data = {}
 
         if offset is not None:
@@ -178,7 +187,11 @@ class Exotel:
 
         return self.__call_api("GET", 'campaigns', data=data)
 
-    def create_campaign(self, caller_id: str, app_id: str, _from: List[str] = None, lists: List[str] = None, name: str = None, call_duplicate_numbers: bool = None, schedule: Schedule = None, campaign_type: str = "static", call_status_callback: str = None, call_schedule_callback: str = None, status_callback: str = None, retry: Retry = None) -> dict:
+    def create_campaign(
+            self, caller_id: str, app_id: str, _from: List[str] = None, lists: List[str] = None,
+            name: str = None, call_duplicate_numbers: bool = None, schedule: Schedule = None,
+            campaign_type: str = "static", call_status_callback: str = None,
+            call_schedule_callback: str = None, status_callback: str = None, retry: Retry = None) -> dict:
         campaign = {
             "caller_id": caller_id,
             "campaign_type": campaign_type,
@@ -227,7 +240,9 @@ class Exotel:
 
         return self.__call_api("POST", 'campaigns', data=payload)
 
-    def create_campaign_with_list(self, numbers: List[str], list_name: str, caller_id: str, app_id: str, **kwargs) -> dict:
+    def create_campaign_with_list(
+            self, numbers: List[str],
+            list_name: str, caller_id: str, app_id: str, **kwargs) -> dict:
         validate_list_of_nums(numbers)
         list_id = self.create_list(name=list_name)
         contact_sids = self.create_contacts(numbers)
@@ -313,7 +328,11 @@ class Exotel:
     def delete_list(self, list_id: str) -> dict:
         return self.__call_api("DELETE", "lists/{list_id}".format(list_id=list_id))
 
-    def create_sms_campaign(self, content_type: str, lists: List[str], dlt_entity_id: int, dlt_template_id: int, sender_id: str, sms_type: str, template: str, name: str = None, schedule: Schedule = None, status_callback: str = None, sms_status_callback: str = None):
+    def create_sms_campaign(
+            self, content_type: str, lists: List[str],
+            dlt_entity_id: int, dlt_template_id: int, sender_id: str, sms_type: str,
+            template: str, name: str = None, schedule: Schedule = None,
+            status_callback: str = None, sms_status_callback: str = None):
         data = {
             "content_type": content_type,
             "lists": lists,
