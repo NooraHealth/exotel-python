@@ -7,7 +7,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 from .exceptions import *
-from .helpers import validate_list_of_nums
+from .helpers import get_error_description, validate_list_of_nums
 from .validators import validate_url
 
 
@@ -132,6 +132,9 @@ class Exotel:
                 "The action is not available on your plan, or you have exceeded usage limits for your current plan.")
         elif response.status_code == 429:
             raise Throttled("Request was throttled.")
+        elif response.status_code == 400:
+            description = get_error_description(response.json())
+            raise ValidationError(description)
 
         return response.json()
 
@@ -195,9 +198,21 @@ class Exotel:
 
     def create_campaign_with_list(self, numbers: List[str], list_name: str, caller_id: str, app_id: str, **kwargs) -> dict:
         validate_list_of_nums(numbers)
-        list_id = self.create_list(name=list_name, numbers=numbers)
+        list_id = self.create_list(name=list_name)
+        contact_sids = self.create_contacts(numbers)
+        self.add_contacts_to_list(contact_sids, list_id)
         lists = [list_id]
-        return self.create_campaign(caller_id=caller_id, app_id=app_id, lists=lists, **kwargs)
+
+        try:
+            self.create_campaign(caller_id=caller_id,
+                                 app_id=app_id, lists=lists, **kwargs)
+        except ValidationError as e:
+            self.delete_list(list_id)
+            self.delete_contacts(contact_sids)
+            raise e
+        else:
+            contact_sids = self.create_contacts(numbers)
+            self.add_contacts_to_list(contact_sids, list_id)
 
     def delete_campaign(self, campaign_id: str) -> dict:
         return self.__call_api("DELETE", urljoin(self.baseurl, "campaigns/{cid}".format(cid=campaign_id)))
@@ -220,7 +235,7 @@ class Exotel:
     def delete_contact(self, sid: str) -> dict:
         return self.__call_api("DELETE", urljoin(self.baseurl, "contacts/{cid}".format(cid=sid)))
 
-    def delete_contacts(self, sids: str) -> List[dict]:
+    def delete_contacts(self, sids: List[str]) -> List[dict]:
         responses = []
         for sid in sids:
             responses.append(self.delete_contact(sid))
@@ -237,7 +252,9 @@ class Exotel:
                                urljoin(self.baseurl, "lists/{list_id}/contacts".format(list_id=list_id)), data=payload)
 
     def create_list(self, name: str, tag: str = "demo", numbers: List[str] = None) -> str:
-        validate_list_of_nums(numbers)
+        if numbers is not None:
+            validate_list_of_nums(numbers)
+
         payload = {
             "lists": [
                 {
