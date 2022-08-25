@@ -97,7 +97,12 @@ class Retry:
         return value
 
     def to_dict(self):
-        return self.__dict__
+        return {
+            "mechanism": self.mechanism,
+            "on_status": self.on_status,
+            "number_of_retries": self.number_of_retries,
+            "interval_mins": self.interval_mins
+        }
 
 
 class Exotel:
@@ -157,6 +162,7 @@ class Exotel:
                 "Either _from or lists must be passed, can't create campaign without it")
 
         if _from is not None:
+            validate_list_of_nums(_from)
             campaign["from"] = _from
 
         if lists is not None:
