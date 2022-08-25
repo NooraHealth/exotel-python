@@ -1,6 +1,4 @@
 from datetime import datetime
-from multiprocessing.sharedctypes import Value
-from subprocess import call
 from typing import List
 from urllib.parse import urljoin
 
@@ -24,7 +22,7 @@ class Schedule:
                 arg=arg, _type=type(value)))
         return value
 
-    def _format_datetime(self, value):
+    def _format_datetime(self, value: datetime) -> str:
         ist = pytz.timezone("Asia/Kolkata")
         return value.astimezone(ist).isoformat()
 
@@ -44,7 +42,7 @@ class Schedule:
     def end_at(self, value):
         self._end_at = self._is_valid_arg("end_at", value)
 
-    def to_json(self):
+    def to_json(self) -> dict:
         output = {
             "send_at": self._format_datetime(self.send_at)
         }
@@ -96,7 +94,7 @@ class Retry:
                 "{v} is not a valid value for mechanism".format(v=value))
         return value
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {
             "mechanism": self.mechanism,
             "on_status": self.on_status,
