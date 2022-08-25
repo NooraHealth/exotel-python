@@ -17,13 +17,15 @@ class Schedule:
         self.send_at = send_at
         self.end_at = end_at
 
-    def _is_valid_arg(self, arg, value):
+    @staticmethod
+    def _is_valid_arg(arg, value):
         if not isinstance(value, datetime):
             raise ValueError("{arg} should be of type datetime not {_type}".format(
                 arg=arg, _type=type(value)))
         return value
 
-    def _format_datetime(self, value: datetime) -> str:
+    @staticmethod
+    def _format_datetime(value: datetime) -> str:
         ist = pytz.timezone("Asia/Kolkata")
         return value.astimezone(ist).isoformat()
 
@@ -77,7 +79,8 @@ class Retry:
     def mechanism(self, value):
         self._mechanism = self._is_valid_mechanism(value)
 
-    def _is_valid_status(self, value):
+    @staticmethod
+    def _is_valid_status(value):
         values = ["busy", "failure", "no-answer"]
 
         if not isinstance(value, list):
@@ -90,7 +93,8 @@ class Retry:
                     "{v} is not a valid value for status".format(v=v))
         return value
 
-    def _is_valid_mechanism(self, value):
+    @staticmethod
+    def _is_valid_mechanism(value):
         values = ["Linear", "Exponential"]
         if value not in values:
             raise ValueError(
