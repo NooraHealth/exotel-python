@@ -157,8 +157,25 @@ class Exotel:
 
         return self.__call_api("GET", urljoin(self.baseurl, 'campaigns/{cid}/call-details'.format(cid=campaign_id)), data=data)
 
-    def get_bulk_campaign_details(self) -> dict:
-        return self.__call_api("GET", urljoin(self.baseurl, 'campaigns'))
+    def get_bulk_campaign_details(self, offset: int = None, limit: int = None, name: str = None, status: str = None, sort_by: str = None) -> dict:
+        data = {}
+
+        if offset is not None:
+            data["offset"] = offset
+
+        if limit is not None:
+            data["limit"] = limit
+
+        if name is not None:
+            data["name"] = name
+
+        if status is not None:
+            data["status"] = status
+
+        if sort_by is not None:
+            data["sort_by"] = sort_by
+
+        return self.__call_api("GET", urljoin(self.baseurl, 'campaigns'), data=data)
 
     def create_campaign(self, caller_id: str, app_id: str, _from: List[str] = None, lists: List[str] = None, name: str = None, call_duplicate_numbers: bool = None, schedule: Schedule = None, campaign_type: str = "static", call_status_callback: str = None, call_schedule_callback: str = None, status_callback: str = None, retry: Retry = None) -> dict:
         campaign = {
