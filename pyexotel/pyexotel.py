@@ -257,9 +257,9 @@ class Exotel:
             self, numbers: List[str],
             list_name: str, caller_id: str, app_id: str, **kwargs) -> dict:
         validate_list_of_nums(numbers)
-        list_id = self.create_list(name=list_name)
-        contact_sids = self.create_contacts(numbers)
-        self.add_contacts_to_list(contact_sids, list_id)
+        data = self.create_list(name=list_name, numbers=numbers)
+        list_id = data["list_id"]
+        contact_sids = data["contact_sids"]
         lists = [list_id]
 
         try:
@@ -271,9 +271,12 @@ class Exotel:
             self.delete_list(list_id)
             self.delete_contacts(contact_sids)
             raise e
-        else:
-            contact_sids = self.create_contacts(numbers)
-            self.add_contacts_to_list(contact_sids, list_id)
+        except PaymentRequired as e:
+            logging.warn(
+                "Exotel API raised payment required error, campaign creation failed, reverting contact and list creation")
+            self.delete_list(list_id)
+            self.delete_contacts(contact_sids)
+            raise e
 
     def delete_campaign(self, campaign_id: str) -> dict:
         return self.__call_api("DELETE", "campaigns/{cid}".format(cid=campaign_id))
@@ -335,7 +338,10 @@ class Exotel:
             contact_sids = self.create_contacts(numbers)
             response = self.add_contacts_to_list(contact_sids, list_id)
 
-        return list_id
+        return {
+            "list_id": list_id,
+            "contact_sids": contact_sids
+        }
 
     def get_list_details(self, list_id: str) -> dict:
         return self.__call_api("GET", "lists/{list_id}".format(list_id=list_id))
