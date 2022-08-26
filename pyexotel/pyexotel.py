@@ -11,6 +11,8 @@ from .exceptions import *
 from .helpers import get_error_description, validate_list_of_nums
 from .validators import validate_url
 
+logger = logging.getLogger("pyexotel")
+
 
 class Schedule:
     def __init__(self, send_at: datetime = None, end_at: datetime = None):
@@ -112,11 +114,10 @@ class Retry:
 
 class Exotel:
     def __init__(self, sid: str, key: str, token: str,
-                 baseurl: str = "https://api.exotel.com", debug: bool = False):
+                 baseurl: str = "https://api.exotel.com"):
         self.sid = sid
         self.baseurl = urljoin(baseurl, "v2/accounts/{sid}/".format(sid=sid))
         self.auth_headers = HTTPBasicAuth(key, token)
-        self.debug = debug
 
     def __call_api(self, method: str, endpoint: str, data: dict = None) -> dict:
         url = urljoin(self.baseurl, endpoint)
@@ -132,12 +133,11 @@ class Exotel:
             response = requests.request(
                 method=method, url=url, auth=self.auth_headers)
 
-        if self.debug:
-            logging.info(
-                "Making API request to {endpoint} with payload: {payload}, received response: {response}".format(
-                    endpoint=endpoint,
-                    payload=data,
-                    response=response.json()))
+        logging.debug(
+            "Making API request to {endpoint} with payload: {payload}, received response: {response}".format(
+                endpoint=endpoint,
+                payload=data,
+                response=response.json()))
 
         if response.status_code == 401:
             raise AuthenticationFailed
@@ -266,7 +266,7 @@ class Exotel:
             self.create_campaign(caller_id=caller_id,
                                  app_id=app_id, lists=lists, **kwargs)
         except ValidationError as e:
-            logging.warn(
+            logger.warn(
                 "Exotel API raised validation error, reverting list and contacts creation")
             self.delete_list(list_id)
             self.delete_contacts(contact_sids)
