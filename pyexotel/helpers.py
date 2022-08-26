@@ -5,7 +5,7 @@ from .validators import validate_phone_number
 
 
 def validate_list_of_nums(numbers: List[str]):
-    if type(numbers) != list:
+    if not isinstance(numbers, list):
         raise ValueError("numbers argument should be a list of strings")
     invalid = []
     for num in numbers:
@@ -20,8 +20,8 @@ def validate_list_of_nums(numbers: List[str]):
 
 
 def get_error_description(data: dict):
-    if type(data["response"]) == list:
+    if isinstance(data["response"], list):
         error_description = data["response"][0]["error_data"]["description"]
-    elif type(data["response"]) == dict:
+    elif isinstance(data["response"], dict):
         error_description = data["response"]["error_data"]["description"]
     return error_description
