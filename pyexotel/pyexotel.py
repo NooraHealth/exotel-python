@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import List
 from urllib.parse import urljoin
 
-import pytz
 import requests
 from requests.auth import HTTPBasicAuth
 
