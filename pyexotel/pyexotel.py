@@ -294,8 +294,8 @@ class Exotel:
         lists = [list_id]
 
         try:
-            self.create_campaign(caller_id=caller_id,
-                                 app_id=app_id, lists=lists, **kwargs)
+            return self.create_campaign(caller_id=caller_id,
+                                        app_id=app_id, lists=lists, **kwargs)
         except ValidationError as e:
             logger.warn(
                 "Exotel API raised validation error, reverting list and contacts creation")
