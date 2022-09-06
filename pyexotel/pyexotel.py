@@ -24,12 +24,16 @@ class Schedule:
         if not isinstance(value, datetime):
             raise ValueError("{arg} should be of type datetime not {_type}".format(
                 arg=arg, _type=type(value)))
+        else:
+            if value.utcoffset() is None:
+                raise ValueError(
+                    "{arg} received a naive datetime, please pass tzinfo".format(
+                        arg=arg))
         return value
 
     @staticmethod
     def _format_datetime(value: datetime) -> str:
-        ist = pytz.timezone("Asia/Kolkata")
-        return value.astimezone(ist).isoformat()
+        return value.isoformat()
 
     @property
     def send_at(self):
