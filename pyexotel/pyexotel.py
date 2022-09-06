@@ -224,7 +224,7 @@ class Exotel:
         return self.__call_api("GET", 'campaigns', data=data)
 
     def create_campaign(
-            self, caller_id: str, app_id: str, _from: List[str] = None, lists: List[str] = None,
+            self, caller_id: str, app_id: str, from_: List[str] = None, lists: List[str] = None,
             name: str = None, call_duplicate_numbers: bool = None, schedule: Schedule = None,
             campaign_type: str = "static", call_status_callback: str = None,
             call_schedule_callback: str = None, status_callback: str = None, retry: Retry = None) -> dict:
@@ -237,17 +237,17 @@ class Exotel:
             "url": f"http://my.exotel.com/{self.sid}/exoml/start_voice/{app_id}",
         }
 
-        if (_from is not None) and (lists is not None):
+        if (from_ is not None) and (lists is not None):
             raise ValueError(
-                "Both _from and lists can't be provided at the same, only either can be passed")
+                "Both from_ and lists can't be provided at the same, only either can be passed")
 
-        if (_from is None) and (lists is None):
+        if (from_ is None) and (lists is None):
             raise ValueError(
-                "Either _from or lists must be passed, can't create campaign without it")
+                "Either from_ or lists must be passed, can't create campaign without it")
 
-        if _from is not None:
-            validate_list_of_nums(_from)
-            campaign["from"] = _from
+        if from_ is not None:
+            validate_list_of_nums(from_)
+            campaign["from"] = from_
 
         if lists is not None:
             campaign["lists"] = lists
@@ -526,7 +526,7 @@ class Exotel:
             "GET", "sms-campaigns/{campaign_id}/sms-details".format(campaign_id=campaign_id), data=data)
 
     def send_bulk_sms(
-            self, _from: str, to: List[str],
+            self, from_: str, to: List[str],
             body: str, encoding_type: str = None, priority: str = None,
             status_callback: str = None, dlt_entity_id: str = None, dlt_template_id: str = None,
             sms_type: str = None):
@@ -536,7 +536,7 @@ class Exotel:
         validate_list_of_nums(to)
 
         data = {
-            "From": _from,
+            "From": from_,
             "To": to,
             "Body": body
         }
