@@ -19,9 +19,12 @@ def validate_list_of_nums(numbers: List[str]):
             "Received invalid numbers as per E.164 format, please check")
 
 
-def get_error_description(data: dict):
-    if isinstance(data["response"], list):
-        error_description = data["response"][0]["error_data"]["description"]
-    elif isinstance(data["response"], dict):
-        error_description = data["response"]["error_data"]["description"]
+def get_error_description(data: dict, version: str = None):
+    if version == "v1":
+        error_description = data["RestException"]["Message"]
+    else:
+        if isinstance(data["response"], list):
+            error_description = data["response"][0]["error_data"]["description"]
+        elif isinstance(data["response"], dict):
+            error_description = data["response"]["error_data"]["description"]
     return error_description

@@ -123,16 +123,26 @@ class Exotel:
         self.baseurl = urljoin(baseurl, "v2/accounts/{sid}/".format(sid=sid))
         self.auth_headers = HTTPBasicAuth(key, token)
 
-    def __call_api(self, method: str, endpoint: str, data: dict = None) -> dict:
-        url = urljoin(self.baseurl, endpoint)
+    def __call_api(self, method: str, endpoint: str,
+                   version: str = 'v2', data: dict = None) -> dict:
+        if version == "v2":
+            url = urljoin(self.baseurl, endpoint)
+        elif version == "v1":
+            baseurl = self.baseurl.replace("v2", "v1")
+            baseurl = baseurl.replace("accounts", "Accounts")
+            url = urljoin(baseurl, endpoint)
 
         if data is not None:
-            if method in ["POST", "PUT", "PATCH"]:
+            if version == "v1":
                 response = requests.request(
-                    method=method, url=url, auth=self.auth_headers, json=data)
-            elif method == "GET":
-                response = requests.request(
-                    method=method, url=url, auth=self.auth_headers, params=data)
+                    method=method, url=url, auth=self.auth_headers, data=data)
+            else:
+                if method in ["POST", "PUT", "PATCH"]:
+                    response = requests.request(
+                        method=method, url=url, auth=self.auth_headers, json=data)
+                elif method == "GET":
+                    response = requests.request(
+                        method=method, url=url, auth=self.auth_headers, params=data)
         else:
             response = requests.request(
                 method=method, url=url, auth=self.auth_headers)
@@ -154,7 +164,7 @@ class Exotel:
         elif response.status_code == 429:
             raise Throttled("Request was throttled.")
         elif response.status_code == 400:
-            description = get_error_description(response.json())
+            description = get_error_description(response.json(), version=version)
             raise ValidationError(description)
 
         return response.json()
@@ -381,3 +391,37 @@ class Exotel:
             data["sms_status_callback"] = validate_url(sms_status_callback)
 
         return self.__call_api("POST", "sms-campaigns", data=data)
+
+    def send_bulk_sms(
+            self, _from: str, to: List[str],
+            body: str, encoding_type: str = None, priority: str = None,
+            status_callback: str = None, dlt_entity_id: str = None, dlt_template_id: str = None,
+            sms_type: str = None):
+
+        validate_list_of_nums(to)
+
+        data = {
+            "From": _from,
+            "To": to,
+            "Boody": body
+        }
+
+        if encoding_type is not None:
+            data["EncodingType"] = encoding_type
+
+        if priority is not None:
+            data["Priority"] = priority
+
+        if status_callback is not None:
+            data["StatusCallback"] = validate_url(status_callback)
+
+        if dlt_entity_id is not None:
+            data["DltEntityId"] = dlt_entity_id
+
+        if dlt_template_id is not None:
+            data["DltTemplateId"] = dlt_template_id
+
+        if sms_type is not None:
+            data["SmsType"] = sms_type
+
+        return self.__call_api("POST", "Sms/send.json", version="v1", data=data)
