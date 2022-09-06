@@ -538,7 +538,7 @@ class Exotel:
         data = {
             "From": _from,
             "To": to,
-            "Boody": body
+            "Body": body
         }
 
         if encoding_type is not None:
