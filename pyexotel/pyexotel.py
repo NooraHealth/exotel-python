@@ -170,11 +170,17 @@ class Exotel:
         return response.json()
 
     def get_campaign_details(self, campaign_id: str) -> dict:
+        """
+            https://developer.exotel.com/api/campaigns#campaign-details
+        """
         return self.__call_api("GET", 'campaigns/{cid}'.format(cid=campaign_id))
 
     def get_campaign_call_details(
             self, campaign_id: str, offset: int = None, limit: int = None, status: str = None,
             sort_by: str = None) -> dict:
+        """
+            https://developer.exotel.com/api/campaigns#call-details-single-campaign
+        """
         data = {}
         if offset is not None:
             data["offset"] = offset
@@ -195,6 +201,9 @@ class Exotel:
     def get_bulk_campaign_details(
             self, offset: int = None, limit: int = None, name: str = None, status: str = None,
             sort_by: str = None) -> dict:
+        """
+            https://developer.exotel.com/api/campaigns#bulk-campaign-details
+        """
         data = {}
 
         if offset is not None:
@@ -219,6 +228,9 @@ class Exotel:
             name: str = None, call_duplicate_numbers: bool = None, schedule: Schedule = None,
             campaign_type: str = "static", call_status_callback: str = None,
             call_schedule_callback: str = None, status_callback: str = None, retry: Retry = None) -> dict:
+        """
+            https://developer.exotel.com/api/campaigns#create-campaign
+        """
         campaign = {
             "caller_id": caller_id,
             "campaign_type": campaign_type,
@@ -270,6 +282,12 @@ class Exotel:
     def create_campaign_with_list(
             self, numbers: List[str],
             list_name: str, caller_id: str, app_id: str, **kwargs) -> dict:
+        """
+            https://developer.exotel.com/api/campaigns#create-campaign
+
+            Slightly customized to create list with numbers
+            passed as argument implicitly
+        """
         validate_list_of_nums(numbers)
         data = self.create_list(name=list_name, numbers=numbers)
         list_id = data["list_id"]
@@ -293,12 +311,21 @@ class Exotel:
             raise e
 
     def delete_campaign(self, campaign_id: str) -> dict:
+        """
+            https://developer.exotel.com/api/campaigns#delete-campaign
+        """
         return self.__call_api("DELETE", "campaigns/{cid}".format(cid=campaign_id))
 
     def get_contact_details(self, contact_id: str) -> dict:
+        """
+            https://developer.exotel.com/api/campaigns-contacts#get-details-of-a-contact
+        """
         return self.__call_api("GET", "contacts/{cid}".format(cid=contact_id))
 
     def create_contacts(self, numbers: List[str]) -> List[str]:
+        """
+            https://developer.exotel.com/api/campaigns-contacts#create-contacts
+        """
         validate_list_of_nums(numbers)
         payload = {
             "contacts": [
@@ -308,6 +335,9 @@ class Exotel:
         return self.__call_api("POST", "contacts", data=payload)
 
     def delete_contact(self, sid: str) -> dict:
+        """
+            https://developer.exotel.com/api/campaigns-contacts#delete-a-contact
+        """
         return self.__call_api("DELETE", "contacts/{cid}".format(cid=sid))
 
     def delete_contacts(self, sids: List[str]) -> List[dict]:
@@ -318,6 +348,9 @@ class Exotel:
         return responses
 
     def add_contacts_to_list(self, sids: List[str], list_id: str) -> dict:
+        """
+            https://developer.exotel.com/api/campaigns-lists#add-contacts-to-a-list
+        """
         payload = {
             "contact_references": [
                 {"contact_sid": sid} for sid in sids
@@ -328,6 +361,12 @@ class Exotel:
 
     def create_list(self, name: str, tag: str = "demo",
                     numbers: List[str] = None) -> dict:
+        """
+            https://developer.exotel.com/api/campaigns-lists#create-lists
+
+            Slighlty modded implementation that takes number as arguments and add
+            those numbers to list after creation
+        """
         if numbers is not None:
             validate_list_of_nums(numbers)
 
@@ -355,10 +394,17 @@ class Exotel:
         return data
 
     def get_list_details(self, list_id: str) -> dict:
+        """
+            https://developer.exotel.com/api/campaigns-lists#get-details-of-a-list
+        """
         return self.__call_api("GET", "lists/{list_id}".format(list_id=list_id))
 
     def get_bulk_lists(self, offset: int = None, limit: int = None,
                        name: str = None, sort_by: str = None) -> dict:
+        """
+            https://developer.exotel.com/api/campaigns-lists#getbulklists
+        """
+
         data = {}
         if offset is not None:
             data["offset"] = offset
@@ -375,6 +421,9 @@ class Exotel:
         return self.__call_api("GET", "lists", data=data)
 
     def get_list_contacts(self, list_id: str, limit: int = None, offset: int = None):
+        """
+            https://developer.exotel.com/api/campaigns-lists#get-contacts-in-a-list
+        """
         data = {}
 
         if offset is not None:
@@ -388,6 +437,9 @@ class Exotel:
             data=data)
 
     def delete_list(self, list_id: str) -> dict:
+        """
+            https://developer.exotel.com/api/campaigns-lists#delete-a-list
+        """
         return self.__call_api("DELETE", "lists/{list_id}".format(list_id=list_id))
 
     def create_sms_campaign(
@@ -395,6 +447,9 @@ class Exotel:
             dlt_entity_id: int, dlt_template_id: int, sender_id: str, sms_type: str,
             template: str, name: str = None, schedule: Schedule = None,
             status_callback: str = None, sms_status_callback: str = None):
+        """
+            https://developer.exotel.com/api/sms-campaigns#create-sms-campaigns
+        """
         data = {
             "content_type": content_type,
             "lists": lists,
@@ -420,12 +475,18 @@ class Exotel:
         return self.__call_api("POST", "sms-campaigns", data=data)
 
     def get_sms_campaign_details(self, campaign_id: str):
+        """
+            https://developer.exotel.com/api/sms-campaigns#sms-campaigns-details
+        """
         return self.__call_api(
             "GET", "sms-campaigns/{campaign_id}".format(campaign_id=campaign_id))
 
     def get_bulk_sms_campaign_details(
             self, offset: int = None, limit: int = None, name: str = None, status: str = None,
             sort_by: str = None) -> dict:
+        """
+            https://developer.exotel.com/api/sms-campaigns#bulk-sms-campaign-details
+        """
         data = {}
 
         if offset is not None:
@@ -447,6 +508,9 @@ class Exotel:
 
     def get_sms_campaign_sms_details(
             self, campaign_id: str, limit: int = None, offset: int = None, sort_by: str = None) -> dict:
+        """
+            https://developer.exotel.com/api/sms-campaigns#sms-details-single-campaign
+        """
         data = {}
 
         if offset is not None:
@@ -466,7 +530,9 @@ class Exotel:
             body: str, encoding_type: str = None, priority: str = None,
             status_callback: str = None, dlt_entity_id: str = None, dlt_template_id: str = None,
             sms_type: str = None):
-
+        """
+            https://developer.exotel.com/api/sms#send-bulk-static-sms
+        """
         validate_list_of_nums(to)
 
         data = {
