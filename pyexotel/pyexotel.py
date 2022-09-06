@@ -120,17 +120,19 @@ class Exotel:
     def __init__(self, sid: str, key: str, token: str,
                  baseurl: str = "https://api.exotel.com"):
         self.sid = sid
-        self.baseurl = urljoin(baseurl, "v2/accounts/{sid}/".format(sid=sid))
+        self.baseurl = baseurl
         self.auth_headers = HTTPBasicAuth(key, token)
 
-    def __call_api(self, method: str, endpoint: str,
-                   version: str = 'v2', data: dict = None) -> dict:
+    def __api_url(self, version: str) -> str:
+        if version == "v1":
+            return urljoin(self.baseurl, "v1/Accounts/{sid}/".format(sid=self.sid))
         if version == "v2":
-            url = urljoin(self.baseurl, endpoint)
-        elif version == "v1":
-            baseurl = self.baseurl.replace("v2", "v1")
-            baseurl = baseurl.replace("accounts", "Accounts")
-            url = urljoin(baseurl, endpoint)
+            return urljoin(self.baseurl, "v2/accounts/{sid}/".format(sid=self.sid))
+
+    def __call_api(self, method: str, endpoint: str,
+                   version: str = "v2", data: dict = None) -> dict:
+
+        url = urljoin(self.__api_url(version), endpoint)
 
         if data is not None:
             if version == "v1":
@@ -148,10 +150,8 @@ class Exotel:
                 method=method, url=url, auth=self.auth_headers)
 
         logging.debug(
-            "Making API request to {endpoint} with payload: {payload}, received response: {response}".format(
-                endpoint=endpoint,
-                payload=data,
-                response=response.json()))
+            "Making API request to {url} with payload: {payload}, received response: {response}".format(
+                url=url, payload=data, response=response.json()))
 
         if response.status_code == 401:
             raise AuthenticationFailed
