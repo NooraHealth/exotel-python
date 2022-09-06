@@ -8,7 +8,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 from .exceptions import *
-from .helpers import get_error_description, validate_list_of_nums
+from .helpers import get_contact_sids, get_error_description, validate_list_of_nums
 from .validators import validate_url
 
 logger = logging.getLogger("pyexotel")
@@ -305,9 +305,7 @@ class Exotel:
                 {"number": num} for num in numbers
             ]
         }
-        data = self.__call_api("POST", "contacts", data=payload)
-        sids = [i["data"]["sid"] for i in data["response"]]
-        return sids
+        return self.__call_api("POST", "contacts", data=payload)
 
     def delete_contact(self, sid: str) -> dict:
         return self.__call_api("DELETE", "contacts/{cid}".format(cid=sid))
@@ -328,7 +326,8 @@ class Exotel:
         return self.__call_api("POST", "lists/{list_id}/contacts".format(list_id=list_id),
                                data=payload)
 
-    def create_list(self, name: str, tag: str = "demo", numbers: List[str] = None) -> str:
+    def create_list(self, name: str, tag: str = "demo",
+                    numbers: List[str] = None) -> dict:
         if numbers is not None:
             validate_list_of_nums(numbers)
 
@@ -349,13 +348,11 @@ class Exotel:
         list_id = data["response"][0]["data"]["sid"]
 
         if numbers is not None:
-            contact_sids = self.create_contacts(numbers)
+            contact_sids = get_contact_sids(self.create_contacts(numbers))
             response = self.add_contacts_to_list(contact_sids, list_id)
+            return response
 
-        return {
-            "list_id": list_id,
-            "contact_sids": contact_sids
-        }
+        return data
 
     def get_list_details(self, list_id: str) -> dict:
         return self.__call_api("GET", "lists/{list_id}".format(list_id=list_id))

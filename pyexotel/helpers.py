@@ -28,3 +28,8 @@ def get_error_description(data: dict, version: str = None):
         elif isinstance(data["response"], dict):
             error_description = data["response"]["error_data"]["description"]
     return error_description
+
+
+def get_contact_sids(data: dict) -> List[str]:
+    sids = [i["data"]["sid"] for i in data["response"]]
+    return sids
