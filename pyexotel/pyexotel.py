@@ -560,3 +560,11 @@ class Exotel:
             data["SmsType"] = sms_type
 
         return self.__call_api("POST", "Sms/send.json", version="v1", data=data)
+
+    def get_sms_details(self, sms_sid: str) -> dict:
+        """
+            https://developer.exotel.com/api/sms#sms-details
+        """
+        return self.__call_api(
+            "GET", "SMS/Messages/{sms_sid}.json".format(sms_sid=sms_sid),
+            version="v1")
