@@ -357,6 +357,36 @@ class Exotel:
     def get_list_details(self, list_id: str) -> dict:
         return self.__call_api("GET", "lists/{list_id}".format(list_id=list_id))
 
+    def get_bulk_lists(self, offset: int = None, limit: int = None,
+                       name: str = None, sort_by: str = None) -> dict:
+        data = {}
+        if offset is not None:
+            data["offset"] = offset
+
+        if limit is not None:
+            data["limit"] = limit
+
+        if name is not None:
+            data["name"] = name
+
+        if sort_by is not None:
+            data["sort_by"] = sort_by
+
+        return self.__call_api("GET", "lists", data=data)
+
+    def get_list_contacts(self, list_id: str, limit: int = None, offset: int = None):
+        data = {}
+
+        if offset is not None:
+            data["offset"] = offset
+
+        if limit is not None:
+            data["limit"] = limit
+
+        return self.__call_api(
+            "GET", "lists/{list_id}/contacts".format(list_id=list_id),
+            data=data)
+
     def delete_list(self, list_id: str) -> dict:
         return self.__call_api("DELETE", "lists/{list_id}".format(list_id=list_id))
 
@@ -388,6 +418,48 @@ class Exotel:
             data["sms_status_callback"] = validate_url(sms_status_callback)
 
         return self.__call_api("POST", "sms-campaigns", data=data)
+
+    def get_sms_campaign_details(self, campaign_id: str):
+        return self.__call_api(
+            "GET", "sms-campaigns/{campaign_id}".format(campaign_id=campaign_id))
+
+    def get_bulk_sms_campaign_details(
+            self, offset: int = None, limit: int = None, name: str = None, status: str = None,
+            sort_by: str = None) -> dict:
+        data = {}
+
+        if offset is not None:
+            data["offset"] = offset
+
+        if limit is not None:
+            data["limit"] = limit
+
+        if name is not None:
+            data["name"] = name
+
+        if status is not None:
+            data["status"] = status
+
+        if sort_by is not None:
+            data["sort_by"] = sort_by
+
+        return self.__call_api("GET", "sms-campaigns", data=data)
+
+    def get_sms_campaign_sms_details(
+            self, campaign_id: str, limit: int = None, offset: int = None, sort_by: str = None) -> dict:
+        data = {}
+
+        if offset is not None:
+            data["offset"] = offset
+
+        if limit is not None:
+            data["limit"] = limit
+
+        if sort_by is not None:
+            data["sort_by"] = sort_by
+
+        return self.__call_api(
+            "GET", "sms-campaigns/{campaign_id}/sms-details".format(campaign_id=campaign_id), data=data)
 
     def send_bulk_sms(
             self, _from: str, to: List[str],
