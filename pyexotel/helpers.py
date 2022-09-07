@@ -33,3 +33,7 @@ def get_error_description(data: dict, version: str = None):
 def get_contact_sids(data: dict) -> List[str]:
     sids = [i["data"]["sid"] for i in data["response"]]
     return sids
+
+
+def get_list_id(data: dict) -> str:
+    return data["response"][0]["data"]["list_id"]

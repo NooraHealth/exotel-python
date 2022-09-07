@@ -7,7 +7,12 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 from .exceptions import *
-from .helpers import get_contact_sids, get_error_description, validate_list_of_nums
+from .helpers import (
+    get_contact_sids,
+    get_error_description,
+    get_list_id,
+    validate_list_of_nums,
+)
 from .validators import validate_url
 
 logger = logging.getLogger("pyexotel")
@@ -289,8 +294,8 @@ class Exotel:
         """
         validate_list_of_nums(numbers)
         data = self.create_list(name=list_name, numbers=numbers)
-        list_id = data["list_id"]
-        contact_sids = data["contact_sids"]
+        list_id = get_list_id(data)
+        contact_sids = get_contact_sids(data)
         lists = [list_id]
 
         try:
