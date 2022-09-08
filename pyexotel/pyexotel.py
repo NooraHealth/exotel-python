@@ -173,60 +173,6 @@ class Exotel:
 
         return response.json()
 
-    def get_campaign_details(self, campaign_id: str) -> dict:
-        """
-            https://developer.exotel.com/api/campaigns#campaign-details
-        """
-        return self.__call_api("GET", 'campaigns/{cid}'.format(cid=campaign_id))
-
-    def get_campaign_call_details(
-            self, campaign_id: str, offset: int = None, limit: int = None, status: str = None,
-            sort_by: str = None) -> dict:
-        """
-            https://developer.exotel.com/api/campaigns#call-details-single-campaign
-        """
-        data = {}
-        if offset is not None:
-            data["offset"] = offset
-
-        if limit is not None:
-            data["limit"] = limit
-
-        if status is not None:
-            data["status"] = status
-
-        if sort_by is not None:
-            data["sort_by"] = sort_by
-
-        return self.__call_api(
-            "GET", 'campaigns/{cid}/call-details'.format(cid=campaign_id),
-            data=data)
-
-    def get_bulk_campaign_details(
-            self, offset: int = None, limit: int = None, name: str = None, status: str = None,
-            sort_by: str = None) -> dict:
-        """
-            https://developer.exotel.com/api/campaigns#bulk-campaign-details
-        """
-        data = {}
-
-        if offset is not None:
-            data["offset"] = offset
-
-        if limit is not None:
-            data["limit"] = limit
-
-        if name is not None:
-            data["name"] = name
-
-        if status is not None:
-            data["status"] = status
-
-        if sort_by is not None:
-            data["sort_by"] = sort_by
-
-        return self.__call_api("GET", 'campaigns', data=data)
-
     def create_campaign(
             self, caller_id: str, app_id: str, from_: List[str] = None, lists: List[str] = None,
             name: str = None, call_duplicate_numbers: bool = None, schedule: Schedule = None,
@@ -314,17 +260,65 @@ class Exotel:
             self.delete_contacts(contact_sids)
             raise e
 
+    def get_campaign_details(self, campaign_id: str) -> dict:
+        """
+            https://developer.exotel.com/api/campaigns#campaign-details
+        """
+        return self.__call_api("GET", 'campaigns/{cid}'.format(cid=campaign_id))
+
     def delete_campaign(self, campaign_id: str) -> dict:
         """
             https://developer.exotel.com/api/campaigns#delete-campaign
         """
         return self.__call_api("DELETE", "campaigns/{cid}".format(cid=campaign_id))
 
-    def get_contact_details(self, contact_id: str) -> dict:
+    def get_bulk_campaign_details(
+            self, offset: int = None, limit: int = None, name: str = None, status: str = None,
+            sort_by: str = None) -> dict:
         """
-            https://developer.exotel.com/api/campaigns-contacts#get-details-of-a-contact
+            https://developer.exotel.com/api/campaigns#bulk-campaign-details
         """
-        return self.__call_api("GET", "contacts/{cid}".format(cid=contact_id))
+        data = {}
+
+        if offset is not None:
+            data["offset"] = offset
+
+        if limit is not None:
+            data["limit"] = limit
+
+        if name is not None:
+            data["name"] = name
+
+        if status is not None:
+            data["status"] = status
+
+        if sort_by is not None:
+            data["sort_by"] = sort_by
+
+        return self.__call_api("GET", 'campaigns', data=data)
+
+    def get_campaign_call_details(
+            self, campaign_id: str, offset: int = None, limit: int = None, status: str = None,
+            sort_by: str = None) -> dict:
+        """
+            https://developer.exotel.com/api/campaigns#call-details-single-campaign
+        """
+        data = {}
+        if offset is not None:
+            data["offset"] = offset
+
+        if limit is not None:
+            data["limit"] = limit
+
+        if status is not None:
+            data["status"] = status
+
+        if sort_by is not None:
+            data["sort_by"] = sort_by
+
+        return self.__call_api(
+            "GET", 'campaigns/{cid}/call-details'.format(cid=campaign_id),
+            data=data)
 
     def create_contacts(self, numbers: List[str]) -> List[str]:
         """
@@ -338,6 +332,12 @@ class Exotel:
         }
         return self.__call_api("POST", "contacts", data=payload)
 
+    def get_contact_details(self, contact_id: str) -> dict:
+        """
+            https://developer.exotel.com/api/campaigns-contacts#get-details-of-a-contact
+        """
+        return self.__call_api("GET", "contacts/{cid}".format(cid=contact_id))
+
     def delete_contact(self, sid: str) -> dict:
         """
             https://developer.exotel.com/api/campaigns-contacts#delete-a-contact
@@ -350,18 +350,6 @@ class Exotel:
             responses.append(self.delete_contact(sid))
 
         return responses
-
-    def add_contacts_to_list(self, sids: List[str], list_id: str) -> dict:
-        """
-            https://developer.exotel.com/api/campaigns-lists#add-contacts-to-a-list
-        """
-        payload = {
-            "contact_references": [
-                {"contact_sid": sid} for sid in sids
-            ]
-        }
-        return self.__call_api("POST", "lists/{list_id}/contacts".format(list_id=list_id),
-                               data=payload)
 
     def create_list(self, name: str, tag: str = "demo",
                     numbers: List[str] = None) -> dict:
@@ -396,6 +384,24 @@ class Exotel:
             return response
 
         return data
+
+    def add_contacts_to_list(self, sids: List[str], list_id: str) -> dict:
+        """
+            https://developer.exotel.com/api/campaigns-lists#add-contacts-to-a-list
+        """
+        payload = {
+            "contact_references": [
+                {"contact_sid": sid} for sid in sids
+            ]
+        }
+        return self.__call_api("POST", "lists/{list_id}/contacts".format(list_id=list_id),
+                               data=payload)
+
+    def delete_list(self, list_id: str) -> dict:
+        """
+            https://developer.exotel.com/api/campaigns-lists#delete-a-list
+        """
+        return self.__call_api("DELETE", "lists/{list_id}".format(list_id=list_id))
 
     def get_list_details(self, list_id: str) -> dict:
         """
@@ -439,12 +445,6 @@ class Exotel:
         return self.__call_api(
             "GET", "lists/{list_id}/contacts".format(list_id=list_id),
             data=data)
-
-    def delete_list(self, list_id: str) -> dict:
-        """
-            https://developer.exotel.com/api/campaigns-lists#delete-a-list
-        """
-        return self.__call_api("DELETE", "lists/{list_id}".format(list_id=list_id))
 
     def create_sms_campaign(
             self, content_type: str, lists: List[str],
@@ -529,6 +529,14 @@ class Exotel:
         return self.__call_api(
             "GET", "sms-campaigns/{campaign_id}/sms-details".format(campaign_id=campaign_id), data=data)
 
+    def get_sms_details(self, sms_sid: str) -> dict:
+        """
+            https://developer.exotel.com/api/sms#sms-details
+        """
+        return self.__call_api(
+            "GET", "SMS/Messages/{sms_sid}.json".format(sms_sid=sms_sid),
+            version="v1")
+
     def send_bulk_sms(
             self, from_: str, to: List[str],
             body: str, encoding_type: str = None, priority: str = None,
@@ -564,11 +572,3 @@ class Exotel:
             data["SmsType"] = sms_type
 
         return self.__call_api("POST", "Sms/send.json", version="v1", data=data)
-
-    def get_sms_details(self, sms_sid: str) -> dict:
-        """
-            https://developer.exotel.com/api/sms#sms-details
-        """
-        return self.__call_api(
-            "GET", "SMS/Messages/{sms_sid}.json".format(sms_sid=sms_sid),
-            version="v1")
