@@ -165,7 +165,8 @@ class Exotel:
                 url=url, payload=data, response=response.json()))
 
         if response.status_code == 401:
-            raise AuthenticationFailed
+            description = get_error_description(response.json())
+            raise AuthenticationFailed(description)
         elif response.status_code == 403:
             raise PermissionDenied(
                 "Your credentials are valid, but you don't have access to the requested resource.")
