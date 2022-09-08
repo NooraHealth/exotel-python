@@ -55,12 +55,19 @@ class Schedule:
     def end_at(self, value):
         self._end_at = self._is_valid_arg("end_at", value)
 
-    def to_json(self) -> dict:
+    def to_json(self, sms: bool = False) -> dict:
+        start = "send_at"
+        end = "end_at"
+
+        if sms is True:
+            start = "start_time"
+            end = "end_time"
+
         output = {
-            "send_at": self._format_datetime(self.send_at)
+            start: self._format_datetime(self.send_at)
         }
         if self.end_at is not None:
-            output["end_at"] = self._format_datetime(self.end_at)
+            output[end] = self._format_datetime(self.end_at)
         return output
 
 
@@ -468,7 +475,7 @@ class Exotel:
             data["name"] = name
 
         if schedule is not None:
-            data["schedule"] = schedule.to_json()
+            data["schedule"] = schedule.to_json(sms=True)
 
         if status_callback is not None:
             data["status_callback"] = validate_url(status_callback)
