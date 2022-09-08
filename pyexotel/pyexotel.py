@@ -37,7 +37,7 @@ class Schedule:
 
     @staticmethod
     def _format_datetime(value: datetime) -> str:
-        return value.isoformat()
+        return value.isoformat(timespec="seconds")
 
     @property
     def send_at(self):
