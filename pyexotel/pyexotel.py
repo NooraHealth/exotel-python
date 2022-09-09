@@ -70,6 +70,11 @@ class Schedule:
             output[end] = self._format_datetime(self.end_at)
         return output
 
+    def __repr__(self) -> str:
+        return "Schedule(send_at='{send_at}', end_at='{end_at}')".format(
+            send_at=self.send_at.isoformat(timespec="seconds"),
+            end_at=self.end_at.isoformat(timespec="seconds"))
+
 
 class Retry:
     def __init__(
@@ -126,6 +131,10 @@ class Retry:
             "interval_mins": self.interval_mins
         }
 
+    def __repr__(self) -> str:
+        return "Retry(mechanism='{mechanism}', on_status=['{on_status}'], number_of_retries={num_of_retries}, interval_mins={interval_mins})".format(
+            mechanism=self.mechanism, num_of_retries=self.number_of_retries, interval_mins=self.interval_mins, on_status="','".join(self.on_status))
+
 
 class Exotel:
     def __init__(self, sid: str, key: str, token: str,
@@ -133,6 +142,10 @@ class Exotel:
         self.sid = sid
         self.baseurl = baseurl
         self.auth_headers = HTTPBasicAuth(key, token)
+
+    def __repr__(self) -> str:
+        return "Exotel(sid='{sid}', baseurl='{baseurl}', key='{key}', token='{token}')".format(
+            sid=self.sid, baseurl=self.baseurl, key=self.auth_headers.username, token=self.auth_headers.password)
 
     def __api_url(self, version: str) -> str:
         if version == "v1":
