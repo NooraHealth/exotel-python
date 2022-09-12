@@ -499,6 +499,29 @@ class Exotel:
 
         return self.__call_api("POST", "sms-campaigns", data=data)
 
+    def create_sms_campaign_with_list(self, numbers: List[str],
+                                      list_name: str, *args, **kwargs):
+        """
+            https://developer.exotel.com/api/sms-campaigns#create-sms-campaigns
+
+            Slightly customized to create list with numbers
+            passed as argument implicitly
+        """
+        validate_list_of_nums(numbers)
+        data = self.create_list(name=list_name, numbers=numbers)
+        list_id = get_list_id(data)
+        contact_sids = get_contact_sids(data)
+        lists = [list_id]
+
+        try:
+            return self.create_sms_campaign(*args, lists=lists, **kwargs)
+        except ValidationError as e:
+            logger.warn(
+                "Exotel API raised validation error, reverting lists and contacts creation")
+            self.delete_list(list_id)
+            self.delete_contacts(contact_sids)
+            raise e
+
     def get_sms_campaign_details(self, campaign_id: str):
         """
             https://developer.exotel.com/api/sms-campaigns#sms-campaigns-details
