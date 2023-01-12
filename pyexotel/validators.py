@@ -25,7 +25,7 @@ def validate_phone_number(value: str) -> str:
         Validates the phone number based on E.164 format
         For reference: https://www.twilio.com/docs/glossary/what-e164
     """
-    regex = re.compile(r'^\+[1-9]\d{1,14}$')
+    regex = re.compile(r'^\+[1-9]\d{10,14}$')
     match = re.match(regex, value)
 
     if match is not None:
