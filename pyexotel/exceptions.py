@@ -24,3 +24,7 @@ class UniqueViolationError(PyexotelBaseException):
 
 class ValidationError(PyexotelBaseException):
     pass
+
+
+class NotFound(PyexotelBaseException):
+    pass

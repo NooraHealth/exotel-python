@@ -20,7 +20,7 @@ def validate_list_of_nums(numbers: List[str]):
 
 
 def get_error_description(data: dict, version: str = None):
-    if version == "v1":
+    if version in ["v1", "v2_beta"]:
         error_description = data["RestException"]["Message"]
     else:
         if isinstance(data["response"], list):

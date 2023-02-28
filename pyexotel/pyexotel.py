@@ -193,6 +193,9 @@ class Exotel:
         elif response.status_code == 400:
             description = get_error_description(response.json(), version=version)
             raise ValidationError(description)
+        elif response.status_code == 404:
+            description = get_error_description(response.json(), version=version)
+            raise NotFound(description)
 
         return response.json()
 
