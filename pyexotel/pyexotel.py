@@ -152,6 +152,8 @@ class Exotel:
             return urljoin(self.baseurl, "v1/Accounts/{sid}/".format(sid=self.sid))
         if version == "v2":
             return urljoin(self.baseurl, "v2/accounts/{sid}/".format(sid=self.sid))
+        if version == "v2_beta":
+            return urljoin(self.baseurl, "v2_beta/Accounts/{sid}/".format(sid=self.sid))
 
     def __call_api(self, method: str, endpoint: str,
                    version: str = "v2", data: dict = None) -> dict:
@@ -616,3 +618,25 @@ class Exotel:
             data["SmsType"] = sms_type
 
         return self.__call_api("POST", "Sms/send.json", version="v1", data=data)
+
+    def get_all_exophones(self):
+        """
+            Get a list of all the ExoPhone numbers that have been assigned to an account
+
+            https://developer.exotel.com/api/exophones#list-exophones
+        """
+        return self.__call_api("GET", "IncomingPhoneNumbers", version="v2_beta")
+
+    def get_exophone_details(self, exophone_sid: str):
+        """
+            Get the details of a specific ExoPhone number of an account
+        """
+        return self.__call_api("GET", f"IncomingPhoneNumbers/{exophone_sid}", version="v2_beta")
+
+    def get_exophone_heartbeat(self, exophone_sid: str):
+        """
+            Get the details of a specific ExoPhone in your account including connectivity information
+
+            https://developer.exotel.com/api-console/heart-beat#get-exophone-details-v2
+        """
+        return self.__call_api("GET", f"incoming-phone-numbers/{exophone_sid}", version="v2")
