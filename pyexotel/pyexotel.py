@@ -633,6 +633,8 @@ class Exotel:
     def get_exophone_details(self, exophone_sid: str):
         """
             Get the details of a specific ExoPhone number of an account
+
+            https://developer.exotel.com/api-console/exophone#get-details-of-an-exophone
         """
         return self.__call_api("GET", f"IncomingPhoneNumbers/{exophone_sid}", version="v2_beta")
 
