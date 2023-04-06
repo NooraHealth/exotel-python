@@ -37,3 +37,13 @@ def get_contact_sids(data: dict) -> List[str]:
 
 def get_list_id(data: dict) -> str:
     return data["response"][0]["data"]["list_id"]
+
+
+def batch_contacts(contacts: list, limit: int = 5000):
+    length = len(contacts)
+    if length % limit == 0:
+        times = length // limit
+    else:
+        times = (length // limit) + 1
+    for i in range(times):
+        yield contacts[i*limit:limit*(i+1)]

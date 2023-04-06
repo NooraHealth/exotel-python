@@ -1,4 +1,5 @@
 import logging
+from copy import deepcopy
 from datetime import datetime
 from typing import List
 from urllib.parse import urljoin
@@ -8,6 +9,7 @@ from requests.auth import HTTPBasicAuth
 
 from .exceptions import *
 from .helpers import (
+    batch_contacts,
     get_contact_sids,
     get_error_description,
     get_list_id,
@@ -191,10 +193,12 @@ class Exotel:
         elif response.status_code == 429:
             raise Throttled("Request was throttled.")
         elif response.status_code == 400:
-            description = get_error_description(response.json(), version=version)
+            description = get_error_description(
+                response.json(), version=version)
             raise ValidationError(description)
         elif response.status_code == 404:
-            description = get_error_description(response.json(), version=version)
+            description = get_error_description(
+                response.json(), version=version)
             raise NotFound(description)
 
         return response.json()
@@ -405,9 +409,18 @@ class Exotel:
         list_id = data["response"][0]["data"]["sid"]
 
         if numbers is not None:
-            contact_sids = get_contact_sids(self.create_contacts(numbers))
-            response = self.add_contacts_to_list(contact_sids, list_id)
-            return response
+            output = None
+            for nums in batch_contacts(numbers):
+                contact_sids = get_contact_sids(self.create_contacts(nums))
+
+                response = self.add_contacts_to_list(contact_sids, list_id)
+                if output is None:
+                    output = deepcopy(response)
+                else:
+                    output["response"] += response["response"]
+                    output["metadata"]["success"] += response["metadata"]["success"]
+                    output["metadata"]["total"] += response["metadata"]["total"]
+            return output
 
         return data
 
