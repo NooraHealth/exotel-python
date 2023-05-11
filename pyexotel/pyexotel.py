@@ -517,6 +517,52 @@ class Exotel:
 
         return self.__call_api("POST", "sms-campaigns", data=data)
 
+    def create_message_campaign(
+        self, content_type: str, lists: List[str],
+        dlt_entity_id: int, template_id: int, sender_id: str, message_type: str,
+        template: str, name: str, channel: str, schedule: Schedule = None,
+        status_callback: str = None, message_status_callback: str = None):
+
+        data = {
+            "content_type": content_type,
+            "lists": lists,
+            "dlt_entity_id": dlt_entity_id,
+            "template_id": template_id,
+            "from": sender_id,
+            "message_type": message_type,
+            "template": template,
+            "name": name,
+            "channel": channel
+        }
+
+        if schedule is not None:
+            data["schedule"] = schedule.to_json(sms=True)
+
+        if status_callback is not None:
+            data["status_callback"] = validate_url(status_callback)
+
+        if message_status_callback is not None:
+            data["message_status_callback"] = validate_url(message_status_callback)
+
+        return self.__call_api("POST", "message-campaigns", data=data)
+
+    def create_message_campaign_with_list(self, numbers: List[str],
+                                          list_name: str, *args, **kwargs):
+        validate_list_of_nums(numbers)
+        data = self.create_list(name=list_name, numbers=numbers)
+        list_id = get_list_id(data)
+        contact_sids = get_contact_sids(data)
+        lists = [list_id]
+
+        try:
+            return self.create_message_campaign(*args, lists=lists, **kwargs)
+        except ValidationError as e:
+            logger.warn(
+                "Exotel API raised validation error, reverting lists and contacts creation")
+            self.delete_list(list_id)
+            self.delete_contacts(contact_sids)
+            raise e
+
     def create_sms_campaign_with_list(self, numbers: List[str],
                                       list_name: str, *args, **kwargs):
         """
