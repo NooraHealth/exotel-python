@@ -7,20 +7,28 @@ from urllib.parse import urljoin
 import requests
 from requests.auth import HTTPBasicAuth
 
-from .exceptions import *
-from .helpers import (
+from pyexotel.exceptions import *
+from pyexotel.helpers import (
     batch_contacts,
     get_contact_sids,
     get_error_description,
     get_list_id,
     validate_list_of_nums,
 )
-from .validators import validate_url
+from pyexotel.validators import validate_url
 
 logger = logging.getLogger("pyexotel")
 
 
 class Schedule:
+    """
+    Utility class for passing schedule of campaigns in a uniform manner
+
+    Args:
+        send_at (datetime, optional): Time when the campaign should start. Defaults to None.
+        end_at (datetime, optional): Time when the campaign should end. Defaults to None.
+    """
+
     def __init__(self, send_at: datetime = None, end_at: datetime = None):
         self.send_at = send_at
         self.end_at = end_at
@@ -58,6 +66,11 @@ class Schedule:
         self._end_at = self._is_valid_arg("end_at", value)
 
     def to_json(self, sms: bool = False) -> dict:
+        """
+            Utility method for serializing API payload
+
+            :meta private:
+        """
         start = "send_at"
         end = "end_at"
 
@@ -79,6 +92,16 @@ class Schedule:
 
 
 class Retry:
+    """
+    Utility class to pass the retry data to campaign methods
+
+    Args:
+        number_of_retries (int): The number of times a call to a phone number should be attempted
+        interval_mins (int): The time interval between retries in mins
+        on_status (List[str]): Determines when should campaign treat a call as an unsuccessful attempt. Could be "busy", "no-answer", "failed"
+        mechanism (str, optional): Can be either "Linear" or "Exponential". If the retry should be equally spaced or exponentially. Defaults to "Linear".
+    """
+
     def __init__(
             self, number_of_retries: int, interval_mins: int,
             on_status: List[str], mechanism: str = "Linear"):
@@ -139,6 +162,17 @@ class Retry:
 
 
 class Exotel:
+    """Object to initialize and interact with Exotel API
+
+    It holds the authentication details
+
+    Args:
+        sid (str): Exotel Account SID
+        key (str): API Key
+        token (str): API Token
+        baseurl (str, optional): Account Subdomain. Defaults to "https://api.exotel.com".
+    """
+
     def __init__(self, sid: str, key: str, token: str,
                  baseurl: str = "https://api.exotel.com"):
         self.sid = sid
@@ -209,7 +243,28 @@ class Exotel:
             campaign_type: str = "static", call_status_callback: str = None,
             call_schedule_callback: str = None, status_callback: str = None, retry: Retry = None) -> dict:
         """
-            https://developer.exotel.com/api/campaigns#create-campaign
+        The parameter information is available at https://developer.exotel.com/api/campaigns#create-campaign
+
+        Args:
+            caller_id (str): This is your ExoPhone
+            app_id (str): Identifier of the flow that you want to connect to once the from number picks up the call, this is used to build the `url` param for API
+            `from_` (List[str], optional): `from` equivalent
+            lists (List[str], optional): Defaults to None.
+            name (str, optional): Defaults to None.
+            call_duplicate_numbers (bool, optional): Defaults to None.
+            schedule (Schedule, optional): Defaults to None.
+            campaign_type (str, optional): Defaults to "static".
+            call_status_callback (str, optional): Defaults to None.
+            call_schedule_callback (str, optional): Defaults to None.
+            status_callback (str, optional): Defaults to None.
+            retry (Retry, optional): Defaults to None.
+
+        Raises:
+            ValueError: raised when both from_ and lists are provided at the same, only either can be passed
+            ValueError: raised when neither from_ or lists is passed, can't create campaign without it
+
+        Returns:
+            dict: json containing API response
         """
         campaign = {
             "caller_id": caller_id,
@@ -262,11 +317,18 @@ class Exotel:
     def create_campaign_with_list(
             self, numbers: List[str],
             list_name: str, caller_id: str, app_id: str, **kwargs) -> dict:
-        """
-            https://developer.exotel.com/api/campaigns#create-campaign
+        """Slightly customized to create list with numbers
+        passed as argument implicitly
 
-            Slightly customized to create list with numbers
-            passed as argument implicitly
+        Args:
+            numbers (List[str]): List of numbers in E.164 format
+            list_name (str): name of contact list that will be created implicitly
+            caller_id (str): This is your exophone
+            app_id (str): Identifier of the flow that you want to connect to once the from number picks up the call, this is used to build the `url` param for API
+            **kwargs: accepts the rest of the arguments of create_campaign
+
+        Returns:
+            dict: json containing API response
         """
         validate_list_of_nums(numbers)
         data = self.create_list(name=list_name, numbers=numbers)
@@ -291,22 +353,46 @@ class Exotel:
             raise e
 
     def get_campaign_details(self, campaign_id: str) -> dict:
-        """
-            https://developer.exotel.com/api/campaigns#campaign-details
+        """Retrieve the details of a specific campaign in your account
+
+        https://developer.exotel.com/api/campaigns#campaign-details
+
+        Args:
+            campaign_id (str): ID of the campaign
+
+        Returns:
+            dict: json object containg the API response
         """
         return self.__call_api("GET", 'campaigns/{cid}'.format(cid=campaign_id))
 
     def delete_campaign(self, campaign_id: str) -> dict:
-        """
-            https://developer.exotel.com/api/campaigns#delete-campaign
+        """Delete a specific campaign
+
+        https://developer.exotel.com/api/campaigns#delete-campaign
+
+        Args:
+            campaign_id (str): ID of the campaign
+
+        Returns:
+            dict: json object containing the API response
         """
         return self.__call_api("DELETE", "campaigns/{cid}".format(cid=campaign_id))
 
     def get_bulk_campaign_details(
             self, offset: int = None, limit: int = None, name: str = None, status: str = None,
             sort_by: str = None) -> dict:
-        """
-            https://developer.exotel.com/api/campaigns#bulk-campaign-details
+        """Allows you to fetch bulk campaign details with sorting and searching capabilities
+        https://developer.exotel.com/api/campaigns#bulk-campaign-details
+
+        Args:
+            offset (int, optional): _description_. Defaults to None.
+            limit (int, optional): number of records on single page. Defaults to None. (Exotel applies its own default, refer docs)
+            name (str, optional): Search on Campaign name. Defaults to None.
+            status (str, optional): Defaults to None.
+            sort_by (str, optional): Defaults to None.
+
+        Returns:
+            dict: json object containing the API response
         """
         data = {}
 
@@ -330,8 +416,17 @@ class Exotel:
     def get_campaign_call_details(
             self, campaign_id: str, offset: int = None, limit: int = None, status: str = None,
             sort_by: str = None) -> dict:
-        """
-            https://developer.exotel.com/api/campaigns#call-details-single-campaign
+        """https://developer.exotel.com/api/campaigns#call-details-single-campaign
+
+        Args:
+            campaign_id (str): ID of the campaign
+            offset (int, optional): Defaults to None.
+            limit (int, optional): Defaults to None.
+            status (str, optional): Defaults to None.
+            sort_by (str, optional): Defaults to None.
+
+        Returns:
+            dict: json object containing the API response
         """
         data = {}
         if offset is not None:
@@ -350,9 +445,16 @@ class Exotel:
             "GET", 'campaigns/{cid}/call-details'.format(cid=campaign_id),
             data=data)
 
-    def create_contacts(self, numbers: List[str]) -> List[str]:
-        """
-            https://developer.exotel.com/api/campaigns-contacts#create-contacts
+    def create_contacts(self, numbers: List[str]):
+        """Create contacts
+
+        https://developer.exotel.com/api/campaigns-contacts#create-contacts
+
+        Args:
+            numbers (List[str]): List of E.164 formatted phone numbers
+
+        Returns:
+            dict: json object containing API response
         """
         validate_list_of_nums(numbers)
         payload = {
@@ -364,17 +466,37 @@ class Exotel:
 
     def get_contact_details(self, contact_id: str) -> dict:
         """
-            https://developer.exotel.com/api/campaigns-contacts#get-details-of-a-contact
+        https://developer.exotel.com/api/campaigns-contacts#get-details-of-a-contact
+
+        Args:
+            contact_id (str): Contact SID
+
+        Returns:
+            dict: json object containing API response
         """
         return self.__call_api("GET", "contacts/{cid}".format(cid=contact_id))
 
     def delete_contact(self, sid: str) -> dict:
+        """https://developer.exotel.com/api/campaigns-contacts#delete-a-contact
+
+        Args:
+            sid (str): contact sid
+
+        Returns:
+            dict: json object containing API response
         """
-            https://developer.exotel.com/api/campaigns-contacts#delete-a-contact
-        """
+
         return self.__call_api("DELETE", "contacts/{cid}".format(cid=sid))
 
     def delete_contacts(self, sids: List[str]) -> List[dict]:
+        """Utility method for deleting multiple contact at once
+
+        Args:
+            sids (List[str]): List of E.164 formatted numbers
+
+        Returns:
+            List[dict]: List of json object containing API response for each contact
+        """
         responses = []
         for sid in sids:
             responses.append(self.delete_contact(sid))
@@ -384,10 +506,21 @@ class Exotel:
     def create_list(self, name: str, tag: str = "demo",
                     numbers: List[str] = None) -> dict:
         """
-            https://developer.exotel.com/api/campaigns-lists#create-lists
+        Slightly modded implementation that takes number as arguments and add
+        those numbers to list after creation
 
-            Slighlty modded implementation that takes number as arguments and add
-            those numbers to list after creation
+        https://developer.exotel.com/api/campaigns-lists#create-lists
+
+        Args:
+            name (str): Name of the list
+            tag (str, optional): Defaults to "demo".
+            numbers (List[str], optional): List of E.164 formatted phone numbers. Defaults to None.
+
+        Raises:
+            UniqueViolationError: When contact list with same name already exists
+
+        Returns:
+            dict: json object containing API response
         """
         if numbers is not None:
             validate_list_of_nums(numbers)
@@ -426,7 +559,14 @@ class Exotel:
 
     def add_contacts_to_list(self, sids: List[str], list_id: str) -> dict:
         """
-            https://developer.exotel.com/api/campaigns-lists#add-contacts-to-a-list
+        https://developer.exotel.com/api/campaigns-lists#add-contacts-to-a-list
+
+        Args:
+            sids (List[str]): List of contact sids to add
+            list_id (str): Contact List ID
+
+        Returns:
+            dict: json object containing API response
         """
         payload = {
             "contact_references": [
@@ -437,21 +577,39 @@ class Exotel:
                                data=payload)
 
     def delete_list(self, list_id: str) -> dict:
-        """
-            https://developer.exotel.com/api/campaigns-lists#delete-a-list
+        """Deletes a list
+
+        https://developer.exotel.com/api/campaigns-lists#delete-a-list
+
+        Args:
+            list_id (str): Contact List ID
+
+        Returns:
+            dict: json object containing API response
         """
         return self.__call_api("DELETE", "lists/{list_id}".format(list_id=list_id))
 
     def get_list_details(self, list_id: str) -> dict:
         """
-            https://developer.exotel.com/api/campaigns-lists#get-details-of-a-list
+        https://developer.exotel.com/api/campaigns-lists#get-details-of-a-list
+
+        Args:
+            list_id (str): Contact List ID
         """
         return self.__call_api("GET", "lists/{list_id}".format(list_id=list_id))
 
     def get_bulk_lists(self, offset: int = None, limit: int = None,
                        name: str = None, sort_by: str = None) -> dict:
-        """
-            https://developer.exotel.com/api/campaigns-lists#getbulklists
+        """https://developer.exotel.com/api/campaigns-lists#getbulklists
+
+        Args:
+            offset (int, optional): Defaults to None.
+            limit (int, optional): Defaults to None.
+            name (str, optional): Defaults to None.
+            sort_by (str, optional): Defaults to None.
+
+        Returns:
+            dict: json object containing API response
         """
 
         data = {}
@@ -469,9 +627,17 @@ class Exotel:
 
         return self.__call_api("GET", "lists", data=data)
 
-    def get_list_contacts(self, list_id: str, limit: int = None, offset: int = None):
+    def get_list_contacts(self, list_id: str, limit: int = None, offset: int = None) -> dict:
         """
-            https://developer.exotel.com/api/campaigns-lists#get-contacts-in-a-list
+        https://developer.exotel.com/api/campaigns-lists#get-contacts-in-a-list
+
+        Args:
+            list_id (str): Contact List ID
+            limit (int, optional): Defaults to None.
+            offset (int, optional): Defaults to None.
+
+        Returns:
+            dict: json object containing API response
         """
         data = {}
 
@@ -489,9 +655,11 @@ class Exotel:
             self, content_type: str, lists: List[str],
             dlt_entity_id: int, dlt_template_id: int, sender_id: str, sms_type: str,
             template: str, name: str = None, schedule: Schedule = None,
-            status_callback: str = None, sms_status_callback: str = None):
-        """
-            https://developer.exotel.com/api/sms-campaigns#create-sms-campaigns
+            status_callback: str = None, sms_status_callback: str = None) -> dict:
+        """Deprecated
+
+        Returns:
+            dict: json object containing API response
         """
         data = {
             "content_type": content_type,
@@ -518,10 +686,30 @@ class Exotel:
         return self.__call_api("POST", "sms-campaigns", data=data)
 
     def create_message_campaign(
-        self, content_type: str, lists: List[str],
-        dlt_entity_id: int, template_id: int, sender_id: str, message_type: str,
-        template: str, name: str, channel: str, schedule: Schedule = None,
-        status_callback: str = None, message_status_callback: str = None):
+            self, content_type: str, lists: List[str],
+            dlt_entity_id: int, template_id: int, sender_id: str, message_type: str,
+            template: str, name: str, channel: str, schedule: Schedule = None,
+            status_callback: str = None, message_status_callback: str = None) -> dict:
+        """Create SMS Campaign
+        https://developer.exotel.com/api/sms-campaigns#create-sms-campaigns
+
+        Args:
+            content_type (str): static or dynamic
+            lists (List[str]): List of contact list IDs
+            dlt_entity_id (int): DLT Entity ID
+            template_id (int): Template ID
+            sender_id (str): Sender ID
+            message_type (str): Transactional/Promotional
+            template (str): Body of the SMS
+            name (str): Name of the campaign
+            channel (str): SMS or Whatsapp
+            schedule (Schedule, optional): Defaults to None.
+            status_callback (str, optional): Defaults to None.
+            message_status_callback (str, optional): Defaults to None.
+
+        Returns:
+            dict: json object containing API response
+        """
 
         data = {
             "content_type": content_type,
@@ -542,12 +730,25 @@ class Exotel:
             data["status_callback"] = validate_url(status_callback)
 
         if message_status_callback is not None:
-            data["message_status_callback"] = validate_url(message_status_callback)
+            data["message_status_callback"] = validate_url(
+                message_status_callback)
 
         return self.__call_api("POST", "message-campaigns", data=data)
 
     def create_message_campaign_with_list(self, numbers: List[str],
-                                          list_name: str, *args, **kwargs):
+                                          list_name: str, *args, **kwargs) -> dict:
+        """Slightly customized to create list with numbers
+        passed as argument implicitly
+
+        https://developer.exotel.com/api/sms-campaigns#create-sms-campaigns
+
+        Args:
+            numbers (List[str]): List of E.164 formatted phone numbers
+            list_name: Name of the contact list which will be used implicitly
+
+        Raises:
+            ValidationError: raised when any of the parameters isn't passed correctly
+        """
         validate_list_of_nums(numbers)
         data = self.create_list(name=list_name, numbers=numbers)
         list_id = get_list_id(data)
@@ -564,12 +765,20 @@ class Exotel:
             raise e
 
     def create_sms_campaign_with_list(self, numbers: List[str],
-                                      list_name: str, *args, **kwargs):
-        """
-            https://developer.exotel.com/api/sms-campaigns#create-sms-campaigns
+                                      list_name: str, *args, **kwargs) -> dict:
+        """Slightly customized to create list with numbers
+        passed as argument implicitly
+        https://developer.exotel.com/api/sms-campaigns#create-sms-campaigns
 
-            Slightly customized to create list with numbers
-            passed as argument implicitly
+        Args:
+            numbers (List[str]): List of E.164 formatted phone numbers
+            list_name: Name of the contact list which will be used implicitly
+
+        Returns:
+            dict: json object containing API response
+
+        Raises:
+            ValidationError: raised when any of the parameters isn't passed correctly
         """
         validate_list_of_nums(numbers)
         data = self.create_list(name=list_name, numbers=numbers)
@@ -586,9 +795,15 @@ class Exotel:
             self.delete_contacts(contact_sids)
             raise e
 
-    def get_sms_campaign_details(self, campaign_id: str):
-        """
-            https://developer.exotel.com/api/sms-campaigns#sms-campaigns-details
+    def get_sms_campaign_details(self, campaign_id: str) -> dict:
+        """Get details of the SMS Campaign
+        https://developer.exotel.com/api/sms-campaigns#sms-campaigns-details
+
+        Args:
+            campaign_id (str): SMS Campaign ID
+
+        Returns:
+            dict: json object containing the API response
         """
         return self.__call_api(
             "GET", "sms-campaigns/{campaign_id}".format(campaign_id=campaign_id))
@@ -596,8 +811,17 @@ class Exotel:
     def get_bulk_sms_campaign_details(
             self, offset: int = None, limit: int = None, name: str = None, status: str = None,
             sort_by: str = None) -> dict:
-        """
-            https://developer.exotel.com/api/sms-campaigns#bulk-sms-campaign-details
+        """https://developer.exotel.com/api/sms-campaigns#bulk-sms-campaign-details
+
+        Args:
+            offset (int, optional): Defaults to None.
+            limit (int, optional): Defaults to None.
+            name (str, optional): Defaults to None.
+            status (str, optional): Defaults to None.
+            sort_by (str, optional): Defaults to None.
+
+        Returns:
+            dict: json object containing API response
         """
         data = {}
 
@@ -620,8 +844,16 @@ class Exotel:
 
     def get_sms_campaign_sms_details(
             self, campaign_id: str, limit: int = None, offset: int = None, sort_by: str = None) -> dict:
-        """
-            https://developer.exotel.com/api/sms-campaigns#sms-details-single-campaign
+        """https://developer.exotel.com/api/sms-campaigns#sms-details-single-campaign
+
+        Args:
+            campaign_id (str): SMS Campaign ID
+            limit (int, optional): Defaults to None.
+            offset (int, optional): Defaults to None.
+            sort_by (str, optional): Defaults to None.
+
+        Returns:
+            dict: json object containing API response
         """
         data = {}
 
@@ -638,8 +870,13 @@ class Exotel:
             "GET", "sms-campaigns/{campaign_id}/sms-details".format(campaign_id=campaign_id), data=data)
 
     def get_sms_details(self, sms_sid: str) -> dict:
-        """
-            https://developer.exotel.com/api/sms#sms-details
+        """https://developer.exotel.com/api/sms#sms-details
+
+        Args:
+            sms_sid (str):sms_id is an alpha-numeric unique identifier generated for all the SMS sent via Exotel
+
+        Returns:
+            dict: json object containing API response
         """
         return self.__call_api(
             "GET", "SMS/Messages/{sms_sid}.json".format(sms_sid=sms_sid),
@@ -649,9 +886,23 @@ class Exotel:
             self, from_: str, to: List[str],
             body: str, encoding_type: str = None, priority: str = None,
             status_callback: str = None, dlt_entity_id: str = None, dlt_template_id: str = None,
-            sms_type: str = None):
+            sms_type: str = None) -> dict:
         """
-            https://developer.exotel.com/api/sms#send-bulk-static-sms
+        https://developer.exotel.com/api/sms#send-bulk-static-sms
+
+        Args:
+            from_ (str): Refer Exotel docs
+            to (List[str]): Refer Exotel docs
+            body (str): Refer Exotel docs
+            encoding_type (str, optional): Defaults to None.
+            priority (str, optional): Defaults to None.
+            status_callback (str, optional): Defaults to None.
+            dlt_entity_id (str, optional): Defaults to None.
+            dlt_template_id (str, optional): Defaults to None.
+            sms_type (str, optional): Defaults to None.
+
+        Returns:
+            dict: json object containing API response
         """
         validate_list_of_nums(to)
 
@@ -681,26 +932,37 @@ class Exotel:
 
         return self.__call_api("POST", "Sms/send.json", version="v1", data=data)
 
-    def get_all_exophones(self):
-        """
-            Get a list of all the ExoPhone numbers that have been assigned to an account
+    def get_all_exophones(self) -> dict:
+        """Get a list of all the ExoPhone numbers that have been assigned to an account
+        https://developer.exotel.com/api/exophones#list-exophones
 
-            https://developer.exotel.com/api/exophones#list-exophones
+        Returns:
+            dict : json object containing API response
         """
         return self.__call_api("GET", "IncomingPhoneNumbers", version="v2_beta")
 
-    def get_exophone_details(self, exophone_sid: str):
-        """
-            Get the details of a specific ExoPhone number of an account
+    def get_exophone_details(self, exophone_sid: str) -> dict:
+        """Get the details of a specific ExoPhone number of an account
 
-            https://developer.exotel.com/api-console/exophone#get-details-of-an-exophone
+        https://developer.exotel.com/api-console/exophone#get-details-of-an-exophone
+
+        Args:
+            exophone_sid (str): Exophone SID
+
+        Returns:
+            dict: json object containing API response
         """
         return self.__call_api("GET", f"IncomingPhoneNumbers/{exophone_sid}", version="v2_beta")
 
-    def get_exophone_heartbeat(self, exophone_sid: str):
-        """
-            Get the details of a specific ExoPhone in your account including connectivity information
+    def get_exophone_heartbeat(self, exophone_sid: str) -> dict:
+        """Get the details of a specific ExoPhone in your account including connectivity information
 
-            https://developer.exotel.com/api-console/heart-beat#get-exophone-details-v2
+        https://developer.exotel.com/api-console/heart-beat#get-exophone-details-v2
+
+        Args:
+            exophone_sid (str): Exophone SID
+
+        Returns:
+            dict: json object containing API response
         """
         return self.__call_api("GET", f"incoming-phone-numbers/{exophone_sid}", version="v2")

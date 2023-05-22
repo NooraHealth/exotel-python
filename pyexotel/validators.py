@@ -4,6 +4,15 @@ from .exceptions import ValidationError
 
 
 def validate_url(value: str) -> str:
+    """
+        Validates whether a string is a valid url or not
+
+        Args:
+            value (str): url
+
+        Raises:
+            ValidationError: raised when an invalid url is passed
+    """
     regex = re.compile(
         r'^(?:http|ftp)s?://'  # http:// or https://
         # domain...
@@ -23,7 +32,16 @@ def validate_url(value: str) -> str:
 def validate_phone_number(value: str) -> str:
     """
         Validates the phone number based on E.164 format
-        For reference: https://www.twilio.com/docs/glossary/what-e164
+
+        https://www.twilio.com/docs/glossary/what-e164
+
+        Returns validated value
+
+        Args:
+            value (str): phone number
+
+        Raises:
+            ValidationError: raised when the number isn't valid
     """
     regex = re.compile(r'^\+[1-9]\d{10,14}$')
     match = re.match(regex, value)
