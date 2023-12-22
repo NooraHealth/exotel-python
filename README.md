@@ -1,14 +1,13 @@
-# Pyexotel
+# ExotelPy
 An unofficial python wrapper for the [Exotel API](https://developer.exotel.com/api)
 
 
-# How to use
+## What is this for?
+This is a python wrapper which provides you the ability to interact with the Exotel API. It also comes with certain utility methods which makes interacting with the Exotel API easier.
+- Documentation : https://noorahealth.github.io/exotel-python/
 
-1. Clone the repo 
-2. Install the project in your directory by passing the path where you cloned this project:
 
-    ```
-    pip install -e exotel-python/
-    ```
-
-    Using the flag `-e` would help in updating the package by pulling from repo without having to reinstall the package.
+## Installation
+```
+pip install exotelpy
+```
