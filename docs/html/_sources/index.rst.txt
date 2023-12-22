@@ -1,15 +1,15 @@
-Welcome to Pyexotel's documentation!
+Welcome to Exotelpy's documentation!
 ====================================
 
 .. autosummary::
    :nosignatures:
 
-   pyexotel.pyexotel.Exotel
-   pyexotel.pyexotel.Schedule
-   pyexotel.pyexotel.Retry
-   pyexotel.exceptions
-   pyexotel.validators
 
+   exotelpy.exotel.Exotel
+   exotelpy.exotel.Schedule
+   exotelpy.exotel.Retry
+   exotelpy.exceptions
+   exotelpy.validators
 
 .. toctree::
    :maxdepth: 1

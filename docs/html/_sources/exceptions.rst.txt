@@ -2,7 +2,7 @@
 Exceptions
 ---------------------
 
-.. automodule:: pyexotel.exceptions
+.. automodule:: exotelpy.exceptions
    :show-inheritance:
    :members:
    :member-order: bysource
