@@ -1,7 +1,7 @@
-﻿pyexotel.exceptions
+﻿exotelpy.exceptions
 ===================
 
-.. automodule:: pyexotel.exceptions
+.. automodule:: exotelpy.exceptions
 
    
    
@@ -31,6 +31,3 @@
       ValidationError
    
    
-
-
-

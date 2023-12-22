@@ -6,29 +6,31 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'Pyexotel'
+import sys
+import os
+project = 'Exotelpy'
 copyright = '2023, Udit Mittal'
 author = 'Udit Mittal'
-release = '1.0'
+release = '0.1.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon', 'sphinx_autodoc_typehints', 'sphinx.ext.autosummary', 'sphinx.ext.githubpages']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon',
+              'sphinx_autodoc_typehints', 'sphinx.ext.autosummary', 'sphinx.ext.githubpages']
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
-
-
+autosummary_generate = False
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'sphinx_material'
 html_theme_options = {
-    'nav_title': 'Pyexotel',
-    'nav_links' : [
+    'nav_title': 'Exotelpy',
+    'nav_links': [
         {
             "href": "exotel",
             "title": "Exotel",
@@ -55,7 +57,7 @@ html_theme_options = {
             "internal": True
         },
     ],
-'globaltoc_depth': 1
+    'globaltoc_depth': 1
 }
 html_static_path = ['_static']
 html_permalinks = True
@@ -63,6 +65,4 @@ html_sidebars = {
     "**": ["globaltoc.html", "localtoc.html", "searchbox.html"]
 }
 
-import os
-import sys
 sys.path.insert(0, os.path.abspath(".."))

@@ -1,7 +1,7 @@
-﻿pyexotel.pyexotel.Retry
+﻿exotelpy.exotel.Retry
 =======================
 
-.. currentmodule:: pyexotel.pyexotel
+.. currentmodule:: exotelpy.exotel
 
 .. autoclass:: Retry
 

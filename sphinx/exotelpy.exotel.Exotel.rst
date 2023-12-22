@@ -1,7 +1,7 @@
-﻿pyexotel.pyexotel.Exotel
+﻿exotelpy.exotel.Exotel
 ========================
 
-.. currentmodule:: pyexotel.pyexotel
+.. currentmodule:: exotelpy.exotel
 
 .. autoclass:: Exotel
 

@@ -1,7 +1,7 @@
-﻿pyexotel.pyexotel.Schedule
+﻿exotelpy.exotel.Schedule
 ==========================
 
-.. currentmodule:: pyexotel.pyexotel
+.. currentmodule:: exotelpy.exotel
 
 .. autoclass:: Schedule
 

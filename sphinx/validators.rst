@@ -2,6 +2,6 @@
 Validators
 ---------------------
 
-.. automodule:: pyexotel.validators
-.. automethod:: pyexotel.validators.validate_url
-.. automethod:: pyexotel.validators.validate_phone_number
+.. automodule:: exotelpy.validators
+.. automethod:: exotelpy.validators.validate_url
+.. automethod:: exotelpy.validators.validate_phone_number

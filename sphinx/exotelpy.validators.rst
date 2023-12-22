@@ -1,7 +1,7 @@
-﻿pyexotel.validators
+﻿exotelpy.validators
 ===================
 
-.. automodule:: pyexotel.validators
+.. automodule:: exotelpy.validators
 
    
    
@@ -25,6 +25,3 @@
    
    
    
-
-
-

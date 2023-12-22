@@ -2,5 +2,5 @@
 Schedule
 ---------------------
 
-.. autoclass:: pyexotel.pyexotel.Schedule
+.. autoclass:: exotelpy.exotel.Schedule
     :members:

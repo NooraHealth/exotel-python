@@ -2,5 +2,5 @@
 Retry
 ---------------------
 
-.. autoclass:: pyexotel.pyexotel.Retry
+.. autoclass:: exotelpy.exotel.Retry
     :members:

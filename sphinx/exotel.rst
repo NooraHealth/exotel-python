@@ -1,4 +1,8 @@
-.. currentmodule:: pyexotel.pyexotel
+---------------------
+Exotel
+---------------------
+
+.. currentmodule:: exotelpy.exotel
 
 .. IMPORTANT::
    Please refer to linked `Exotel API docs <https://developer.exotel.com/api/sms>`_ for more details
