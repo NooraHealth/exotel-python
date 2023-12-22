@@ -1,13 +1,27 @@
 [tool.poetry]
-name = "pyexotel"
+name = "exotelpy"
 version = "0.1.0"
-description = "A Python wrapper for the Exotel API"
+license = "Apache-2.0"
+description = "An unofficial Python wrapper for the Exotel API"
 authors = ["Udit <udit@noorahealth.com>"]
+homepage = "https://noorahealth.github.io/exotel-python/"
+repository = "https://github.com/NooraHealth/exotel-python/"
+documentation = "https://noorahealth.github.io/exotel-python/"
+keywords = ["exotel"]
+readme = "README.md"
+classifiers = [
+    "Operating System :: OS Independent",
+    "Topic :: Communications :: Telephony",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+packages = [
+    { include = "exotelpy" }
+]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.9, <3.13"
 requests = "^2.28.1"
-jinja2 = "3.0.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
