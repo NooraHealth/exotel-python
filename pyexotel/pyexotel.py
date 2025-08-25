@@ -128,7 +128,7 @@ class Retry:
 
     @staticmethod
     def _is_valid_status(value):
-        values = ["busy", "failure", "no-answer"]
+        values = ["busy", "failed", "no-answer"]
 
         if not isinstance(value, list):
             raise TypeError(
