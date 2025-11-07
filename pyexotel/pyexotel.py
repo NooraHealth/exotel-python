@@ -331,9 +331,14 @@ class Exotel:
             dict: json containing API response
         """
         validate_list_of_nums(numbers)
-        data = self.create_list(name=list_name, numbers=numbers)
-        list_id = get_list_id(data)
-        contact_sids = get_contact_sids(data)
+        try:
+            data = self.create_list(name=list_name, numbers=numbers)
+            list_id = get_list_id(data)
+            contact_sids = get_contact_sids(data)
+        except UniqueViolationError:
+            list_id = get_list_id(self.get_bulk_lists(name=list_name))
+            contact_sids = []
+
         lists = [list_id]
 
         try:
@@ -343,13 +348,15 @@ class Exotel:
             logger.warn(
                 "Exotel API raised validation error, reverting list and contacts creation")
             self.delete_list(list_id)
-            self.delete_contacts(contact_sids)
+            if contact_sids:
+                self.delete_contacts(contact_sids)
             raise e
         except PaymentRequired as e:
             logging.warn(
                 "Exotel API raised payment required error, campaign creation failed, reverting contact and list creation")
             self.delete_list(list_id)
-            self.delete_contacts(contact_sids)
+            if contact_sids:
+                self.delete_contacts(contact_sids)
             raise e
 
     def get_campaign_details(self, campaign_id: str) -> dict:
