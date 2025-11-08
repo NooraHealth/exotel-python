@@ -16,7 +16,8 @@ def validate_list_of_nums(numbers: List[str]):
 
     if len(invalid) > 0:
         raise ValidationError(
-            "Received invalid numbers as per E.164 format, please check")
+            "Received invalid numbers as per E.164 format, please check"
+        )
 
 
 def get_error_description(data: dict, version: str = None):
@@ -36,7 +37,8 @@ def get_contact_sids(data: dict) -> List[str]:
 
 
 def get_list_id(data: dict) -> str:
-    return data["response"][0]["data"]["list_id"]
+    data = data["response"][0]["data"]
+    return data.get("list_id") or data["sid"]
 
 
 def batch_contacts(contacts: list, limit: int = 5000):
@@ -46,4 +48,4 @@ def batch_contacts(contacts: list, limit: int = 5000):
     else:
         times = (length // limit) + 1
     for i in range(times):
-        yield contacts[i*limit:limit*(i+1)]
+        yield contacts[i * limit : limit * (i + 1)]
